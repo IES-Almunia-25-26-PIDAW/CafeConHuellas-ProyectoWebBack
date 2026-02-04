@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/cafe_con_huellas.iml" filepath="$PROJECT_DIR$/.idea/cafe_con_huellas.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cafe_con_huellas/cafe_con_huellas.iml" filepath="$PROJECT_DIR$/cafe_con_huellas/cafe_con_huellas.iml" />
     </modules>
   </component>
 </project>
