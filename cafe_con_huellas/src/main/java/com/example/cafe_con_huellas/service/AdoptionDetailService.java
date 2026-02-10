@@ -37,7 +37,7 @@ public class AdoptionDetailService {
     }
 
 
-    // ---------- CONSULTAS ÚTILES ----------
+    // ---------- CONSULTAS ÚTILES ----------no
 
     // Obtiene el detalle de adopción asociado a una relación concreta
     public AdoptionDetail findByRelationshipId(Long relationshipId) {
