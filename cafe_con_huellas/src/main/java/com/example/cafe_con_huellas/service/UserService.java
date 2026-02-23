@@ -1,5 +1,7 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.exception.BadRequestException;
+import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.model.entity.Role;
 import com.example.cafe_con_huellas.model.entity.User;
 import com.example.cafe_con_huellas.repository.UserRepository;
@@ -26,7 +28,7 @@ public class UserService {
     // Busca un usuario por su ID
     public User findById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + id));
     }
 
    /* // Guarda un nuevo usuario o actualiza uno existente
@@ -38,9 +40,9 @@ public class UserService {
     // Registro con validación de email duplicado
     public User register(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("El email " + user.getEmail() + " ya está registrado.");
+            throw new BadRequestException("El email " + user.getEmail() + " ya está registrado.");
         }
-        // Nota: Aquí en el futuro aplicarás passwordEncoder.encode(user.getPassword())
+        // Aquí en el futuro aplicaramos passwordEncoder.encode(user.getPassword())
         return userRepository.save(user);
     }
 
@@ -61,7 +63,7 @@ public class UserService {
     // Elimina un usuario por su ID
     public void deleteById(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("No se puede eliminar: Usuario no encontrado");
+            throw new ResourceNotFoundException("No se puede eliminar: Usuario no encontrado con ID: " + id);
         }
         userRepository.deleteById(id);
     }
@@ -71,7 +73,7 @@ public class UserService {
     // Busca un usuario por su email
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
     }
 
     // Comprueba si un email ya está registrado

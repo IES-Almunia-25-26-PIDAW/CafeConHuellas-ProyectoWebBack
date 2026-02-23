@@ -1,5 +1,7 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.exception.BadRequestException;
+import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.model.entity.UserPetFavorite;
 import com.example.cafe_con_huellas.repository.UserPetFavoriteRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,16 +26,23 @@ public class UserPetFavoriteService {
     // Busca un favorito por su ID
     public UserPetFavorite findById(Long id) {
         return favoriteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Favorite not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Mascota Favorita no encontrada con ID: " + id));
     }
 
     // Guarda un nuevo favorito
     public UserPetFavorite save(UserPetFavorite favorite) {
+        // Validación: Si ya existe la relación Usuario-Mascota, lanzamos error 400
+        if (favoriteRepository.existsByUserIdAndPetId(favorite.getUser().getId(), favorite.getPet().getId())) {
+            throw new BadRequestException("Esta mascota ya está en tu lista de favoritos.");
+        }
         return favoriteRepository.save(favorite);
     }
 
     // Elimina un favorito por su ID
     public void deleteById(Long id) {
+        if (!favoriteRepository.existsById(id)) {
+            throw new ResourceNotFoundException("No se pudo eliminar: La mascota favorita no existe.");
+        }
         favoriteRepository.deleteById(id);
     }
 

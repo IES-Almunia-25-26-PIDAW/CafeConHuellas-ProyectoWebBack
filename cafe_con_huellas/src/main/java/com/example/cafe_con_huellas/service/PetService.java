@@ -1,5 +1,6 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.model.entity.Pet;
 import com.example.cafe_con_huellas.model.entity.PetCategory;
 import com.example.cafe_con_huellas.repository.PetRepository;
@@ -24,7 +25,7 @@ public class PetService {
     // Busca una mascota por ID
     public Pet findById(Long id) {
         return petRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pet not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + id));
     }
 
     // Guarda o actualiza una mascota
@@ -34,6 +35,9 @@ public class PetService {
 
     // Elimina una mascota (borra también imágenes por cascade)
     public void deleteById(Long id) {
+        if (!petRepository.existsById(id)) {
+            throw new ResourceNotFoundException("No se puede eliminar. Mascota no encontrada");
+        }
         petRepository.deleteById(id);
     }
 
@@ -70,7 +74,7 @@ public class PetService {
 
     // Actualiza solo información editable desde la web
     public Pet updateBasicInfo(Long id, Pet updatedPet) {
-        Pet pet = findById(id);
+        Pet pet = findById(id); // Reutiliza findById que ya lanza la excepción
 
         pet.setName(updatedPet.getName());
         pet.setDescription(updatedPet.getDescription());

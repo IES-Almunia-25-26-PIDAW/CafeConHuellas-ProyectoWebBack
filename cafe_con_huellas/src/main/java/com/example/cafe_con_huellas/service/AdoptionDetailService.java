@@ -1,5 +1,7 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.exception.BadRequestException;
+import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.model.entity.AdoptionDetail;
 import com.example.cafe_con_huellas.repository.AdoptionDetailRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,16 +25,24 @@ public class AdoptionDetailService {
     // Buscar detalle por ID
     public AdoptionDetail findById(Long id) {
         return adoptionDetailRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Adoption detail not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Detalle de adopción no encontrado con ID: " + id));
     }
 
     // Guardar detalle
     public AdoptionDetail save(AdoptionDetail adoptionDetail) {
+        // Validación: Si ya existe un detalle para esta relación, no permitimos otro (1:1)
+        if (adoptionDetail.getId() == null &&
+                existsByRelationshipId(adoptionDetail.getRelationship().getId())) {
+            throw new BadRequestException("Esta relación ya tiene un registro de detalles de adopción.");
+        }
         return adoptionDetailRepository.save(adoptionDetail);
     }
 
     // Eliminar detalle
     public void deleteById(Long id) {
+        if (!adoptionDetailRepository.existsById(id)) {
+            throw new ResourceNotFoundException("No se puede eliminar. Registro no encontrado.");
+        }
         adoptionDetailRepository.deleteById(id);
     }
 

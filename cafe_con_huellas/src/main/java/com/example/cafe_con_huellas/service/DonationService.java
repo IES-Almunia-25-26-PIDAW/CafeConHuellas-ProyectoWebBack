@@ -1,5 +1,7 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.exception.BadRequestException;
+import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.model.entity.Donation;
 import com.example.cafe_con_huellas.repository.DonationRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +27,16 @@ public class DonationService {
     // Busca una donación por su ID
     public Donation findById(Long id) {
         return donationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Donation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Donación no encontrada con ID: " + id));
     }
 
     // Registra una nueva donación
     public Donation save(Donation donation) {
-        // Se asegura de registrar la fecha actual si no viene informada
+        // Validación: No permitimos donaciones sin importe o negativas
+        if (donation.getAmount() == null || donation.getAmount().doubleValue() <= 0) {
+            throw new BadRequestException("El importe de la donación debe ser mayor que cero.");
+        }
+
         if (donation.getDate() == null) {
             donation.setDate(LocalDateTime.now());
         }
@@ -39,6 +45,9 @@ public class DonationService {
 
     // Elimina una donación por su ID
     public void deleteById(Long id) {
+        if (!donationRepository.existsById(id)) {
+            throw new ResourceNotFoundException("No se puede eliminar: Donación no encontrada");
+        }
         donationRepository.deleteById(id);
     }
 

@@ -2,13 +2,16 @@ package com.example.cafe_con_huellas.controller;
 
 import com.example.cafe_con_huellas.dto.PetDetailDTO;
 import com.example.cafe_con_huellas.dto.PetSummaryDTO;
+import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.mapper.PetMapper;
 import com.example.cafe_con_huellas.model.entity.Pet;
 import com.example.cafe_con_huellas.service.PetService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +23,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/pets")
 @RequiredArgsConstructor
+@Validated // Permite que las validaciones en los parámetros de los métodos funcionen
 public class PetController {
-
 
     private final PetService petService;
     private final PetMapper petMapper;
@@ -82,6 +85,7 @@ public class PetController {
         existingPet.setName(petDetailDTO.getName());
         existingPet.setDescription(petDetailDTO.getDescription());
         existingPet.setBreed(petDetailDTO.getBreed());
+        // Se asume que el mapper maneja la conversión de String a Enum correctamente
         existingPet.setCategory(petMapper.categoryFromString(petDetailDTO.getCategory()));
         existingPet.setAge(petDetailDTO.getAge());
         existingPet.setWeight(petDetailDTO.getWeight());
@@ -98,9 +102,9 @@ public class PetController {
      * @param id ID de la mascota
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePet(@PathVariable @NotNull Long id) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePet(@PathVariable @NotNull Long id) {
         petService.deleteById(id);
-        return ResponseEntity.noContent().build();
     }
 
     // -------------------- FILTROS --------------------
@@ -125,30 +129,14 @@ public class PetController {
      */
     @GetMapping("/filter/category")
     public List<PetSummaryDTO> getPetsByCategory(@RequestParam String category) {
-        return petService.findByCategory(category)
+        // Convertimos el String a Enum usando el método del mapper
+        var categoryEnum = petMapper.categoryFromString(category);
+
+        // Pasamos el Enum al servicio que es lo que él espera
+        return petService.findByCategory(categoryEnum)
                 .stream()
                 .map(petMapper::toSummaryDto)
                 .toList();
-    }
-
-    // -------------------- MANEJO DE ERRORES --------------------
-
-    /**
-     * Captura excepciones cuando no se encuentra un recurso
-     */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<String> handleNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
-    }
-
-    /**
-     * Captura errores de validación
-     */
-    @ExceptionHandler({IllegalArgumentException.class, jakarta.validation.ConstraintViolationException.class})
-    public ResponseEntity<String> handleBadRequest(Exception ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
     }
 
 

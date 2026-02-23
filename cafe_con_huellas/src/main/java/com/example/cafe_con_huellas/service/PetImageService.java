@@ -1,5 +1,6 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.model.entity.PetImage;
 import com.example.cafe_con_huellas.repository.PetImageRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class PetImageService {
     // Busca una imagen por su ID
     public PetImage findById(Long id) {
         return petImageRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pet image not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Imagen de la mascota no encontrada con ID: " + id));
     }
 
     // Guarda una nueva imagen o actualiza una existente
@@ -34,6 +35,10 @@ public class PetImageService {
 
     // Elimina una imagen por su ID
     public void deleteById(Long id) {
+        // Validación antes de borrar para evitar errores en la consola
+        if (!petImageRepository.existsById(id)) {
+            throw new ResourceNotFoundException("No se puede eliminar: La imagen no existe.");
+        }
         petImageRepository.deleteById(id);
     }
 
