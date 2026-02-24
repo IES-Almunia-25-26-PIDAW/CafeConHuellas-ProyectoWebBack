@@ -50,7 +50,7 @@ public class AdoptionDetailController {
      * Útil para añadir notas sobre cómo se está adaptando la mascota o registrar incidencias
      */
     @PutMapping("/{id}")
-    public AdoptionDetailDTO updateAdoptionDetail(@PathVariable Long id, @RequestBody AdoptionDetailDTO dto) {
+    public AdoptionDetailDTO updateAdoptionDetail(@PathVariable Long id, @Valid @RequestBody AdoptionDetailDTO dto) {
         AdoptionDetail existing = adoptionDetailService.findById(id);
 
         // Actualizamos solo los campos de información, no los IDs de relación

@@ -5,6 +5,7 @@ import com.example.cafe_con_huellas.dto.UserSummaryDTO;
 import com.example.cafe_con_huellas.mapper.UserMapper;
 import com.example.cafe_con_huellas.model.entity.User;
 import com.example.cafe_con_huellas.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -41,7 +42,7 @@ public class UserController {
      * Se utiliza un método controlado en el service para no sobrescribir la contraseña.
      */
     @PutMapping("/{id}")
-    public UserDetailDTO updateProfile(@PathVariable Long id, @RequestBody User userDetails) {
+    public UserDetailDTO updateProfile(@PathVariable Long id,@Valid @RequestBody User userDetails) {
         // El service se encarga de buscar y actualizar
         return userMapper.toDetailDto(userService.updateProfile(id, userDetails));
     }

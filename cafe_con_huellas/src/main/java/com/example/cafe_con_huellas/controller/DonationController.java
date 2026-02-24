@@ -4,6 +4,7 @@ import com.example.cafe_con_huellas.dto.DonationDTO;
 import com.example.cafe_con_huellas.mapper.DonationMapper;
 import com.example.cafe_con_huellas.model.entity.Donation;
 import com.example.cafe_con_huellas.service.DonationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class DonationController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public DonationDTO createDonation(@RequestBody DonationDTO donationDTO) {
+    public DonationDTO createDonation(@Valid @RequestBody DonationDTO donationDTO) {
         Donation donation = donationMapper.toEntity(donationDTO);
         return donationMapper.toDto(donationService.save(donation));
     }

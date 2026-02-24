@@ -4,6 +4,7 @@ import com.example.cafe_con_huellas.dto.PetVaccineDTO;
 import com.example.cafe_con_huellas.mapper.PetVaccineMapper;
 import com.example.cafe_con_huellas.model.entity.PetVaccine;
 import com.example.cafe_con_huellas.service.PetVaccineService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class PetVaccineController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PetVaccineDTO addVaccineToPet(@RequestBody PetVaccineDTO dto) {
+    public PetVaccineDTO addVaccineToPet(@Valid @RequestBody PetVaccineDTO dto) {
         PetVaccine entity = petVaccineMapper.toEntity(dto);
         return petVaccineMapper.toDto(petVaccineService.save(entity));
     }
