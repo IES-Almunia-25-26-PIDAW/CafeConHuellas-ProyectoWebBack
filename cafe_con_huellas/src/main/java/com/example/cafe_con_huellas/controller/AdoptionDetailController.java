@@ -20,49 +20,45 @@ import java.util.List;
 public class AdoptionDetailController {
 
     private final AdoptionDetailService adoptionDetailService;
-    private final AdoptionDetailMapper adoptionDetailMapper;
 
     // Obtiene todos los registros de detalles de adopción (Historial completo)
     @GetMapping
     public List<AdoptionDetailDTO> getAllDetails() {
-        return adoptionDetailService.findAll().stream()
-                .map(adoptionDetailMapper::toDto)
-                .toList();
+        // El servicio ya devuelve una lista de DTOs
+        return adoptionDetailService.findAll();
     }
 
-    // Busca los detalles específicos de una adopción por su ID
+    // Busca los detalles específicos de una adopción por su identificador único
     @GetMapping("/{id}")
     public AdoptionDetailDTO getDetailById(@PathVariable Long id) {
-        return adoptionDetailMapper.toDto(adoptionDetailService.findById(id));
+        // El servicio ya maneja la excepción y el mapeo a DTO
+        return adoptionDetailService.findById(id);
     }
 
-    /* Registra los detalles técnicos de una adopción
-     * Vincula el contrato con una relación usuario-mascota ya existente
+    /* * Registra los detalles técnicos de una adopción.
+     * Recibe un DTO validado y delega la persistencia al servicio.
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AdoptionDetailDTO createAdoptionDetail(@Valid @RequestBody AdoptionDetailDTO dto) {
-        AdoptionDetail entity = adoptionDetailMapper.toEntity(dto);
-        return adoptionDetailMapper.toDto(adoptionDetailService.save(entity));
+        return adoptionDetailService.save(dto);
     }
 
-    /* Actualiza el seguimiento de la adopción
-     * Útil para añadir notas sobre cómo se está adaptando la mascota o registrar incidencias
+    /* * Actualiza el seguimiento de la adopción (notas, condiciones, lugar).
+     * Utiliza el método de actualización controlada del servicio.
      */
     @PutMapping("/{id}")
     public AdoptionDetailDTO updateAdoptionDetail(@PathVariable Long id, @Valid @RequestBody AdoptionDetailDTO dto) {
-        AdoptionDetail existing = adoptionDetailService.findById(id);
-
-        // Actualizamos solo los campos de información, no los IDs de relación
-        existing.setPlace(dto.getPlace());
-        existing.setConditions(dto.getConditions());
-        existing.setIssues(dto.getIssues());
-        existing.setNotes(dto.getNotes());
-
-        return adoptionDetailMapper.toDto(adoptionDetailService.save(existing));
+        return adoptionDetailService.updateDetails(id, dto);
     }
 
-    // Elimina detalle adopción
+    // Busca detalles asociados a una relación usuario-mascota específica
+    @GetMapping("/relationship/{relationshipId}")
+    public AdoptionDetailDTO getByRelationshipId(@PathVariable Long relationshipId) {
+        return adoptionDetailService.findByRelationshipId(relationshipId);
+    }
+
+    // Elimina el registro de detalles de una adopción del sistema
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDetail(@PathVariable Long id) {

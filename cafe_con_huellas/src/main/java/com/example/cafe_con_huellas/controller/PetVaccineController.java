@@ -20,28 +20,40 @@ import java.util.List;
 public class PetVaccineController {
 
     private final PetVaccineService petVaccineService;
-    private final PetVaccineMapper petVaccineMapper;
 
     // Obtiene el historial sanitario completo de una mascota por su ID
     @GetMapping("/pet/{petId}")
     public List<PetVaccineDTO> getVaccinesByPet(@PathVariable Long petId) {
-        return petVaccineService.findByPetId(petId).stream()
-                .map(petVaccineMapper::toDto)
-                .toList();
+        // El servicio ya devuelve la lista de DTOs mapeada
+        return petVaccineService.findByPetId(petId);
     }
 
-    /** Registra la administración de una nueva vacuna.
+    // Obtiene un registro de vacunación específico por su identificador
+    @GetMapping("/{id}")
+    public PetVaccineDTO getVaccineById(@PathVariable Long id) {
+        return petVaccineService.findById(id);
+    }
+
+    /** * Registra la administración de una nueva vacuna.
      * Vincula una mascota con una vacuna específica y la fecha de aplicación.
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PetVaccineDTO addVaccineToPet(@Valid @RequestBody PetVaccineDTO dto) {
-        PetVaccine entity = petVaccineMapper.toEntity(dto);
-        return petVaccineMapper.toDto(petVaccineService.save(entity));
+        // Pasamos el DTO directamente, el servicio se encarga de las validaciones y el mapeo
+        return petVaccineService.save(dto);
     }
 
     /**
-     * Elimina un registro de vacunación por su ID.
+     * Actualiza la información médica de un registro de vacunación (notas o próxima dosis).
+     */
+    @PutMapping("/{id}")
+    public PetVaccineDTO updateVaccineRecord(@PathVariable Long id, @Valid @RequestBody PetVaccineDTO dto) {
+        return petVaccineService.updateMedicalInfo(id, dto);
+    }
+
+    /**
+     * Elimina un registro de vacunación por su ID del historial de la mascota.
      */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

@@ -20,15 +20,26 @@ import java.util.List;
 public class DonationController {
 
     private final DonationService donationService;
-    private final DonationMapper donationMapper;
 
     // Devuelve el listado completo de todas las donaciones registradas
     @GetMapping
     public List<DonationDTO> getAllDonations() {
-        return donationService.findAll().stream()
-                .map(donationMapper::toDto)
-                .toList();
+        return donationService.findAll();
     }
+
+    // Obtener una donación por ID
+    @GetMapping("/{id}")
+    public DonationDTO getDonationById(@PathVariable Long id) {
+        return donationService.findById(id);
+    }
+
+    // Eliminar una donación
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteDonation(@PathVariable Long id) {
+        donationService.deleteById(id);
+    }
+
 
     /* Registra una nueva donación en el sistema.
      * El servicio se encarga de asignar la fecha actual automáticamente.
@@ -36,15 +47,33 @@ public class DonationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public DonationDTO createDonation(@Valid @RequestBody DonationDTO donationDTO) {
-        Donation donation = donationMapper.toEntity(donationDTO);
-        return donationMapper.toDto(donationService.save(donation));
+        // Pasamos el DTO directamente al service
+        return donationService.save(donationDTO);
     }
 
     // Obtiene todas las donaciones realizadas por un usuario específico
     @GetMapping("/user/{userId}")
     public List<DonationDTO> getDonationsByUser(@PathVariable Long userId) {
-        return donationService.findByUserId(userId).stream()
-                .map(donationMapper::toDto)
-                .toList();
+        return donationService.findByUserId(userId);
     }
+
+    // Obtener donaciones por categoría
+    @GetMapping("/category/{category}")
+    public List<DonationDTO> getDonationsByCategory(@PathVariable String category) {
+        return donationService.findByCategory(category);
+    }
+
+    // Estadísticas: Total por usuario
+    @GetMapping("/user/{userId}/total")
+    public Double getTotalByUser(@PathVariable Long userId) {
+        return donationService.getTotalAmountByUser(userId);
+    }
+
+    // Estadísticas: Total global
+    @GetMapping("/total")
+    public Double getTotalGlobal() {
+        return donationService.getTotalDonationsAmount();
+    }
+
+
 }

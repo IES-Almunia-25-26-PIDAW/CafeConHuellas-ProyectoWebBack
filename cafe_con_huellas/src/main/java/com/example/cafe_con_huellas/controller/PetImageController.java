@@ -20,28 +20,47 @@ import java.util.List;
 public class PetImageController {
 
     private final PetImageService petImageService;
-    private final PetImageMapper petImageMapper;
 
-    // Obtiene todas las imágenes de la galería de una mascota específica
-    @GetMapping("/pet/{petId}")
-    public List<PetImageDTO> getImagesByPet(@PathVariable Long petId) {
-        return petImageService.findByPetId(petId).stream()
-                .map(petImageMapper::toDto)
-                .toList();
+    // Obtiene todas las imágenes registradas en el sistema
+    @GetMapping
+    public List<PetImageDTO> getAllImages() {
+        return petImageService.findAll();
     }
 
-    // Añade una nueva foto a la galería de una mascota
+    // Busca una imagen específica mediante su identificador único
+    @GetMapping("/{id}")
+    public PetImageDTO getImageById(@PathVariable Long id) {
+        return petImageService.findById(id);
+    }
+
+    // Recupera todas las fotos pertenecientes a una mascota específica
+    @GetMapping("/pet/{petId}")
+    public List<PetImageDTO> getImagesByPet(@PathVariable Long petId) {
+        // El servicio ya devuelve la lista de DTOs mapeada
+        return petImageService.findByPetId(petId);
+    }
+
+    /* * Registra una nueva foto en la galería de una mascota.
+     * Recibe la URL y el ID de la mascota dentro del DTO.
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PetImageDTO addImage(@Valid @RequestBody PetImageDTO dto) {
-        PetImage entity = petImageMapper.toEntity(dto);
-        return petImageMapper.toDto(petImageService.save(entity));
+        // Delegamos la validación de la mascota y el mapeo al Service
+        return petImageService.save(dto);
     }
 
-    // Borra una foto específica de la galería
+    // Elimina una foto específica de la galería del sistema
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteImage(@PathVariable Long id) {
         petImageService.deleteById(id);
+    }
+
+    // Elimina todas las fotos asociadas a una mascota de forma masiva
+    @DeleteMapping("/pet/{petId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteByPetId(@PathVariable Long petId) {
+        petImageService.deleteByPetId(petId);
     }
 }

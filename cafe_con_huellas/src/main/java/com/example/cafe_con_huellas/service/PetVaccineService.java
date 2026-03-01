@@ -1,14 +1,20 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.dto.PetVaccineDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
+import com.example.cafe_con_huellas.mapper.PetVaccineMapper;
 import com.example.cafe_con_huellas.model.entity.PetVaccine;
+import com.example.cafe_con_huellas.repository.PetRepository;
 import com.example.cafe_con_huellas.repository.PetVaccineRepository;
+import com.example.cafe_con_huellas.repository.VaccineRepository;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 // Servicio encargado de la lógica de negocio del historial de vacunación
 @Service
@@ -16,71 +22,99 @@ import java.util.List;
 public class PetVaccineService {
 
     private final PetVaccineRepository petVaccineRepository;
+    private final PetRepository petRepository;
+    private final VaccineRepository vaccineRepository;
+    private final PetVaccineMapper petVaccineMapper;
 
     // ---------- CRUD BÁSICO ----------
 
-    // Devuelve todas las vacunas aplicadas a mascotas
-    public List<PetVaccine> findAll() {
-        return petVaccineRepository.findAll();
+    // Obtiene todo el historial de vacunación global convertido a DTO
+    @Transactional(readOnly = true)
+    public List<PetVaccineDTO> findAll() {
+        return petVaccineRepository.findAll().stream()
+                .map(petVaccineMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Busca una aplicación de vacuna por su ID
-    public PetVaccine findById(Long id) {
+    // Busca un registro de vacunación específico por su ID y lo devuelve como DTO
+    @Transactional(readOnly = true)
+    public PetVaccineDTO findById(Long id) {
         return petVaccineRepository.findById(id)
+                .map(petVaccineMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de vacunación no encontrado con ID: " + id));
     }
 
-    // Registra una nueva vacuna aplicada
-    public PetVaccine save(PetVaccine petVaccine) {
-        // Validación: La fecha de aplicación no debería ser futura
-        if (petVaccine.getDateAdministered() != null && petVaccine.getDateAdministered().isAfter(LocalDate.now())) {
-            throw new BadRequestException("La fecha de administración de la vacuna no puede ser una fecha futura.");
+    // Registra la aplicación de una vacuna validando existencia de mascota y tipo de vacuna
+    @Transactional
+    public PetVaccineDTO save(PetVaccineDTO dto) {
+        // Validación de negocio: La vacuna ya debe haberse puesto, no puede ser en el futuro
+        if (dto.getDateAdministered() != null && dto.getDateAdministered().isAfter(LocalDate.now())) {
+            throw new BadRequestException("La fecha de administración no puede ser una fecha futura.");
         }
-        return petVaccineRepository.save(petVaccine);
+
+        // Convertimos el DTO a Entidad
+        PetVaccine petVaccine = petVaccineMapper.toEntity(dto);
+
+        // Vinculamos con las entidades reales de la base de datos
+        petVaccine.setPet(petRepository.findById(dto.getPetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + dto.getPetId())));
+
+        petVaccine.setVaccine(vaccineRepository.findById(dto.getVaccineId())
+                .orElseThrow(() -> new ResourceNotFoundException("Tipo de vacuna no encontrado con ID: " + dto.getVaccineId())));
+
+        // Guardamos y retornamos el DTO
+        return petVaccineMapper.toDto(petVaccineRepository.save(petVaccine));
     }
 
-    // Elimina un registro de vacunación
+    // Elimina un registro de vacunación del historial médico
+    @Transactional
     public void deleteById(Long id) {
         if (!petVaccineRepository.existsById(id)) {
-            throw new ResourceNotFoundException("No se puede eliminar: Registro no encontrado");
+            throw new ResourceNotFoundException("No se puede eliminar. Registro no encontrado");
         }
         petVaccineRepository.deleteById(id);
     }
 
-
     // ---------- FILTROS Y BÚSQUEDAS ----------
 
-    // Devuelve el historial de vacunación de una mascota concreta
-    public List<PetVaccine> findByPetId(Long petId) {
-        return petVaccineRepository.findByPetId(petId);
+    // Obtiene el historial completo de vacunas de una mascota específica
+    @Transactional(readOnly = true)
+    public List<PetVaccineDTO> findByPetId(Long petId) {
+        return petVaccineRepository.findByPetId(petId).stream()
+                .map(petVaccineMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Devuelve todas las aplicaciones de una vacuna concreta
-    public List<PetVaccine> findByVaccineId(Long vaccineId) {
-        return petVaccineRepository.findByVaccineId(vaccineId);
+    // Busca vacunas programadas para refuerzo a partir de una fecha concreta
+    @Transactional(readOnly = true)
+    public List<PetVaccineDTO> findUpcomingVaccines(LocalDate fromDate) {
+        return petVaccineRepository.findByNextDoseDateAfter(fromDate).stream()
+                .map(petVaccineMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Devuelve vacunas con próxima dosis pendiente a partir de una fecha
-    public List<PetVaccine> findUpcomingVaccines(LocalDate fromDate) {
-        return petVaccineRepository.findByNextDoseDateAfter(fromDate);
+    // Identifica vacunas cuyo refuerzo ha expirado (pendientes de aplicar)
+    @Transactional(readOnly = true)
+    public List<PetVaccineDTO> findOverdueVaccines() {
+        return petVaccineRepository.findByNextDoseDateBefore(LocalDate.now()).stream()
+                .map(petVaccineMapper::toDto)
+                .collect(Collectors.toList());
     }
-
-    // Devuelve vacunas cuyo refuerzo ya debería haberse aplicado (vacunas vencidas)
-    public List<PetVaccine> findOverdueVaccines() {
-        return petVaccineRepository.findByNextDoseDateBefore(LocalDate.now());
-    }
-
 
     // ---------- ACTUALIZACIÓN CONTROLADA ----------
 
-    // Actualiza datos médicos básicos sin modificar relaciones
-    public PetVaccine updateMedicalInfo(Long id, PetVaccine updated) {
-        PetVaccine vaccine = findById(id); // Usa el método que ya lanza la excepción
+    // Actualiza información médica como la fecha de la próxima dosis o notas de observación
+    @Transactional
+    public PetVaccineDTO updateMedicalInfo(Long id, PetVaccineDTO dto) {
+        // Verificamos que el registro exista
+        PetVaccine vaccine = petVaccineRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se puede actualizar: Registro no encontrado"));
 
-        vaccine.setNextDoseDate(updated.getNextDoseDate());
-        vaccine.setNotes(updated.getNotes());
+        // Actualizamos campos permitidos para no romper la trazabilidad del tratamiento
+        vaccine.setNextDoseDate(dto.getNextDoseDate());
+        vaccine.setNotes(dto.getNotes());
 
-        return petVaccineRepository.save(vaccine);
+        return petVaccineMapper.toDto(petVaccineRepository.save(vaccine));
     }
 
 

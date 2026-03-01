@@ -65,5 +65,8 @@ public interface PetMapper {
         }
     }
 
+    // Convierte de un DTO de detalle a un DTO de resumen (útil para los listados del PetController)
+    PetSummaryDTO toSummaryDto(PetDetailDTO detailDto);
+
 
 }

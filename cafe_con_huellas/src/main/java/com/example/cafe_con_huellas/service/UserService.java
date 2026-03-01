@@ -1,15 +1,18 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.dto.UserDetailDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
+import com.example.cafe_con_huellas.mapper.UserMapper;
 import com.example.cafe_con_huellas.model.entity.Role;
 import com.example.cafe_con_huellas.model.entity.User;
 import com.example.cafe_con_huellas.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 // Servicio encargado de la lógica de negocio relacionada con los usuarios
 @Service
@@ -17,95 +20,98 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     // ---------- CRUD BÁSICO ----------
 
-    // Devuelve todos los usuarios registrados
-    public List<User> findAll() {
-        return userRepository.findAll();
+    // Obtiene todos los usuarios en formato detalle
+    @Transactional(readOnly = true)
+    public List<UserDetailDTO> findAll() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toDetailDto)
+                .collect(Collectors.toList());
     }
 
-    // Busca un usuario por su ID
-    public User findById(Long id) {
+    // Busca un usuario por ID y devuelve su ficha completa
+    @Transactional(readOnly = true)
+    public UserDetailDTO findById(Long id) {
         return userRepository.findById(id)
+                .map(userMapper::toDetailDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + id));
     }
 
-   /* // Guarda un nuevo usuario o actualiza uno existente
-    public User save(User user) {
-        return userRepository.save(user);
-    }
-    */
-
-    // Registro con validación de email duplicado
-    public User register(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new BadRequestException("El email " + user.getEmail() + " ya está registrado.");
+    // Registra un nuevo usuario validando que el email no exista
+    @Transactional
+    public UserDetailDTO register(UserDetailDTO dto) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new BadRequestException("El email " + dto.getEmail() + " ya está registrado.");
         }
-        // Aquí en el futuro aplicaramos passwordEncoder.encode(user.getPassword())
-        return userRepository.save(user);
+
+        User user = userMapper.toEntity(dto);
+        // Nota: El password debería gestionarse en un DTO de Registro aparte o
+        // asegurar que el mapper lo trate si viene en el JSON inicial.
+
+        return userMapper.toDetailDto(userRepository.save(user));
     }
 
-    // Actualizar perfil (evita sobrescribir todo el objeto)
-    public User updateProfile(Long id, User userDetails) {
-        User user = findById(id);
+    // Actualiza los datos del perfil desde el DTO de detalle
+    @Transactional
+    public UserDetailDTO updateProfile(Long id, UserDetailDTO dto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se puede actualizar: Usuario no encontrado"));
 
-        user.setFirstName(userDetails.getFirstName());
-        user.setLastName1(userDetails.getLastName1());
-        user.setLastName2(userDetails.getLastName2());
-        user.setPhone(userDetails.getPhone());
-        user.setImageUrl(userDetails.getImageUrl());
+        user.setFirstName(dto.getFirstName());
+        user.setLastName1(dto.getLastName1());
+        user.setLastName2(dto.getLastName2());
+        user.setPhone(dto.getPhone());
+        user.setImageUrl(dto.getImageUrl());
 
-        return userRepository.save(user);
+        // Actualizamos el rol si viene en el DTO (usando el método de conversión del mapper)
+        if (dto.getRole() != null) {
+            user.setRole(userMapper.roleFromString(dto.getRole()));
+        }
+
+        return userMapper.toDetailDto(userRepository.save(user));
     }
-
 
     // Elimina un usuario por su ID
+    @Transactional
     public void deleteById(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("No se puede eliminar: Usuario no encontrado con ID: " + id);
+            throw new ResourceNotFoundException("No se puede eliminar: Usuario no encontrado");
         }
         userRepository.deleteById(id);
     }
 
     // ---------- MÉTODOS ESPECÍFICOS ----------
 
-    // Busca un usuario por su email
-    public User findByEmail(String email) {
+    // Busca un usuario por su email único
+    @Transactional(readOnly = true)
+    public UserDetailDTO findByEmail(String email) {
         return userRepository.findByEmail(email)
+                .map(userMapper::toDetailDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
     }
 
-    // Comprueba si un email ya está registrado
-    public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
+    // Devuelve usuarios filtrados por su rol (ADMIN, USER)
+    @Transactional(readOnly = true)
+    public List<UserDetailDTO> findByRole(Role role) {
+        return userRepository.findByRole(role).stream()
+                .map(userMapper::toDetailDto)
+                .collect(Collectors.toList());
     }
 
-    // Devuelve todos los usuarios con un rol específico (ADMIN o USER)
-    public List<User> findByRole(Role role) {
-        return userRepository.findByRole(role);
-    }
+    // ---------- SEGURIDAD Y ESTADÍSTICAS ----------
 
-    // Buscar por nombre para filtros en la web
-    public List<User> searchByName(String term) {
-        return userRepository.findByFirstNameContainingIgnoreCaseOrLastName1ContainingIgnoreCase(term, term);
-    }
-//_______________________________________________________________________________________________________________________________
     @Transactional
     public void updatePassword(Long id, String newPassword) {
-        User user = findById(id);
-
-        // Aquí, antes de guardar, es donde en el futuro usarás BCrypt
-        // String encodedPassword = passwordEncoder.encode(newPassword);
-        // user.setPassword(encodedPassword);
-
-        user.setPassword(newPassword); // Por ahora lo guardamos así hasta que configures Security
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        user.setPassword(newPassword);
         userRepository.save(user);
     }
-  //_______________________________________________________________________________________________________________________________
 
-    // ---------- ESTADÍSTICAS ----------
-
+    @Transactional(readOnly = true)
     public long getTotalUsersCount() {
         return userRepository.count();
     }

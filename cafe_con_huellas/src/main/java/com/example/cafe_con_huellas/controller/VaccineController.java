@@ -20,33 +20,31 @@ import java.util.List;
 public class VaccineController {
 
     private final VaccineService vaccineService;
-    private final VaccineMapper vaccineMapper;
 
-    // Obtiene el catálogo completo de vacunas disponibles
+    // Obtiene el catálogo completo de vacunas disponibles en formato DTO
     @GetMapping
     public List<VaccineDTO> getAllVaccines() {
-        return vaccineService.findAll().stream()
-                .map(vaccineMapper::toDto)
-                .toList();
+        // El service ya devuelve la lista mapeada a DTO
+        return vaccineService.findAll();
     }
 
     // Obtiene los detalles de una vacuna específica por su ID
     @GetMapping("/{id}")
     public VaccineDTO getVaccineById(@PathVariable Long id) {
-        return vaccineMapper.toDto(vaccineService.findById(id));
+        return vaccineService.findById(id);
     }
 
-    /* Crea una nueva vacuna en el catálogo.
-     * Útil para cuando el refugio empieza a usar una vacuna nueva.
+    /* * Registra una nueva vacuna en el catálogo.
+     * El service se encarga de validar que el nombre no esté duplicado.
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public VaccineDTO createVaccine(@Valid @RequestBody VaccineDTO vaccineDTO) {
-        Vaccine vaccine = vaccineMapper.toEntity(vaccineDTO);
-        return vaccineMapper.toDto(vaccineService.save(vaccine));
+        // Pasamos el DTO directo al service para que gestione el mapeo y persistencia
+        return vaccineService.save(vaccineDTO);
     }
 
-    // Elimina una vacuna del catálogo (solo si no está siendo usada por ninguna mascota)
+    // Elimina una vacuna del catálogo
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteVaccine(@PathVariable Long id) {

@@ -17,5 +17,6 @@ public interface DonationMapper {
 
     // El usuario se setea en el service
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "date", ignore = true)
     Donation toEntity(DonationDTO dto);
 }

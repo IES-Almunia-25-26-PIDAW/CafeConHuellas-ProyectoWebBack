@@ -34,17 +34,15 @@ public class UserController {
     // Obtiene el perfil completo de un usuario por su ID
     @GetMapping("/{id}")
     public UserDetailDTO getUserById(@PathVariable Long id) {
-        // El service lanzará la excepción 404 si no lo encuentra
-        return userMapper.toDetailDto(userService.findById(id));
+        return userService.findById(id);
     }
 
     /* Actualiza la información personal del usuario.
      * Se utiliza un método controlado en el service para no sobrescribir la contraseña.
      */
     @PutMapping("/{id}")
-    public UserDetailDTO updateProfile(@PathVariable Long id,@Valid @RequestBody User userDetails) {
-        // El service se encarga de buscar y actualizar
-        return userMapper.toDetailDto(userService.updateProfile(id, userDetails));
+    public UserDetailDTO updateProfile(@PathVariable Long id, @Valid @RequestBody UserDetailDTO userDetailDTO) {
+        return userService.updateProfile(id, userDetailDTO);
     }
 
     // Elimina un usuario del sistema permanentemente.

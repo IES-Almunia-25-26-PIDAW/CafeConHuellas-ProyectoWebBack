@@ -20,39 +20,59 @@ import java.util.List;
 public class UserPetRelationshipController {
 
     private final UserPetRelationshipService relationshipService;
-    private final UserPetRelationshipMapper relationshipMapper;
 
-    // Lista todos los vínculos (historial y activos)
+    // Lista todos los vínculos registrados en el sistema (historial y activos)
     @GetMapping
     public List<UserPetRelationshipDTO> getAllRelationships() {
-        return relationshipService.findAll().stream()
-                .map(relationshipMapper::toDto)
-                .toList();
+        return relationshipService.findAll();
     }
 
-    // Filtra y devuelve solo los procesos que están activos actualmente
+    // Busca una relación específica mediante su identificador único
+    @GetMapping("/{id}")
+    public UserPetRelationshipDTO getRelationshipById(@PathVariable Long id) {
+        return relationshipService.findById(id);
+    }
+
+    // Filtra y devuelve solo los procesos que están marcados como activos actualmente
     @GetMapping("/active")
     public List<UserPetRelationshipDTO> getActiveRelationships() {
-        return relationshipService.findActiveRelationships().stream()
-                .map(relationshipMapper::toDto)
-                .toList();
+        return relationshipService.findActiveRelationships();
     }
 
-    /* Registra un nuevo vínculo (ej. se inicia un proceso de adopción).
-     * El sistema vincula el ID del usuario con el ID de la mascota.
+    // Obtiene el historial de relaciones de un usuario específico
+    @GetMapping("/user/{userId}")
+    public List<UserPetRelationshipDTO> getRelationshipsByUser(@PathVariable Long userId) {
+        return relationshipService.findByUserId(userId);
+    }
+
+    // Obtiene la trazabilidad de relaciones que ha tenido una mascota
+    @GetMapping("/pet/{petId}")
+    public List<UserPetRelationshipDTO> getRelationshipsByPet(@PathVariable Long petId) {
+        return relationshipService.findByPetId(petId);
+    }
+
+    /* * Registra un nuevo vínculo (ej. se inicia un proceso de adopción o acogida).
+     * El servicio valida automáticamente la disponibilidad de la mascota.
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserPetRelationshipDTO createRelationship(@Valid @RequestBody UserPetRelationshipDTO dto) {
-        UserPetRelationship entity = relationshipMapper.toEntity(dto);
-        return relationshipMapper.toDto(relationshipService.save(entity));
+        return relationshipService.save(dto);
     }
 
-    /*
-     * Finaliza una relación activa (ej. marcar el fin de una casa de acogida).
+    /* * Finaliza una relación activa (ej. marcar el fin de una casa de acogida o paseo).
+     * Establece el estado 'active' a false y asigna la fecha de cierre.
      */
     @PatchMapping("/{id}/end")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void endRelationship(@PathVariable Long id) {
         relationshipService.endRelationship(id, null);
+    }
+
+    // Elimina un registro de relación (Solo para correcciones administrativas)
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRelationship(@PathVariable Long id) {
+        relationshipService.deleteById(id);
     }
 }

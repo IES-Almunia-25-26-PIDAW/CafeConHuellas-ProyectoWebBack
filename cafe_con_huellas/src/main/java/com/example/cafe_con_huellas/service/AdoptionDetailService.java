@@ -1,79 +1,96 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.dto.AdoptionDetailDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
+import com.example.cafe_con_huellas.mapper.AdoptionDetailMapper;
 import com.example.cafe_con_huellas.model.entity.AdoptionDetail;
 import com.example.cafe_con_huellas.repository.AdoptionDetailRepository;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AdoptionDetailService {
 
-    private final AdoptionDetailRepository adoptionDetailRepository;
+        private final AdoptionDetailRepository adoptionDetailRepository;
+        private final AdoptionDetailMapper adoptionDetailMapper;
 
-    // ---------- CRUD BÁSICO ----------
+        // ---------- CRUD BÁSICO ----------
 
-    // Obtener todos los detalles de adopción registrados
-    public List<AdoptionDetail> findAll() {
-        return adoptionDetailRepository.findAll();
-    }
-
-    // Buscar detalle por ID
-    public AdoptionDetail findById(Long id) {
-        return adoptionDetailRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Detalle de adopción no encontrado con ID: " + id));
-    }
-
-    // Guardar detalle
-    public AdoptionDetail save(AdoptionDetail adoptionDetail) {
-        // Validación: Si ya existe un detalle para esta relación, no permitimos otro (1:1)
-        if (adoptionDetail.getId() == null &&
-                existsByRelationshipId(adoptionDetail.getRelationship().getId())) {
-            throw new BadRequestException("Esta relación ya tiene un registro de detalles de adopción.");
+        // Obtiene todos los registros de detalles de adopción convertidos a DTO
+        @Transactional(readOnly = true)
+        public List<AdoptionDetailDTO> findAll() {
+            return adoptionDetailRepository.findAll().stream()
+                    .map(adoptionDetailMapper::toDto)
+                    .collect(Collectors.toList());
         }
-        return adoptionDetailRepository.save(adoptionDetail);
-    }
 
-    // Eliminar detalle
-    public void deleteById(Long id) {
-        if (!adoptionDetailRepository.existsById(id)) {
-            throw new ResourceNotFoundException("No se puede eliminar. Registro no encontrado.");
+        // Busca un detalle específico por su ID y lo devuelve como DTO
+        @Transactional(readOnly = true)
+        public AdoptionDetailDTO findById(Long id) {
+            return adoptionDetailRepository.findById(id)
+                    .map(adoptionDetailMapper::toDto)
+                    .orElseThrow(() -> new ResourceNotFoundException("Detalle de adopción no encontrado con ID: " + id));
         }
-        adoptionDetailRepository.deleteById(id);
-    }
 
+        // Registra un nuevo detalle de adopción validando que no exista duplicidad en la relación
+        @Transactional
+        public AdoptionDetailDTO save(AdoptionDetailDTO dto) {
+            // Validación: Usamos el método del repositorio para evitar duplicados en la misma relación
+            if (dto.getId() == null && adoptionDetailRepository.existsByRelationshipId(dto.getUserPetRelationshipId())) {
+                throw new BadRequestException("Ya existen detalles registrados para esta relación de adopción.");
+            }
 
-    // ---------- CONSULTAS ÚTILES ----------no
+            // Convertimos el DTO a Entidad, guardamos y devolvemos el DTO resultante
+            AdoptionDetail entity = adoptionDetailMapper.toEntity(dto);
+            AdoptionDetail savedEntity = adoptionDetailRepository.save(entity);
 
-    // Obtiene el detalle de adopción asociado a una relación concreta
-    public AdoptionDetail findByRelationshipId(Long relationshipId) {
-        return adoptionDetailRepository.findByRelationshipId(relationshipId);
-    }
+            return adoptionDetailMapper.toDto(savedEntity);
+        }
 
-    // Comprueba si una relación ya tiene detalle de adopción, evita duplicados
-    public boolean existsByRelationshipId(Long relationshipId) {
-        return adoptionDetailRepository.existsByRelationshipId(relationshipId);
-    }
+        // Elimina un registro de detalles por su identificador único
+        @Transactional
+        public void deleteById(Long id) {
+            if (!adoptionDetailRepository.existsById(id)) {
+                throw new ResourceNotFoundException("No se puede eliminar. Registro no encontrado.");
+            }
+            adoptionDetailRepository.deleteById(id);
+        }
 
+        // ---------- CONSULTAS ESPECÍFICAS ----------
 
+        // Busca detalles asociados a un ID de relación específico
+        @Transactional(readOnly = true)
+        public AdoptionDetailDTO findByRelationshipId(Long relationshipId) {
+            AdoptionDetail detail = adoptionDetailRepository.findByRelationshipId(relationshipId);
+            if (detail == null) {
+                throw new ResourceNotFoundException("No se encontraron detalles para la relación con ID: " + relationshipId);
+            }
+            return adoptionDetailMapper.toDto(detail);
+        }
 
-    // ---------- ACTUALIZACIÓN CONTROLADA ----------
-    // Actualiza información administrativa de la adopción
-    public AdoptionDetail updateDetails(Long id, AdoptionDetail updated) {
-        AdoptionDetail detail = findById(id);
+        // ---------- ACTUALIZACIÓN CONTROLADA ----------
 
-        detail.setPlace(updated.getPlace());
-        detail.setConditions(updated.getConditions());
-        detail.setIssues(updated.getIssues());
-        detail.setNotes(updated.getNotes());
+        // Actualiza los campos informativos de seguimiento de un registro existente
+        @Transactional
+        public AdoptionDetailDTO updateDetails(Long id, AdoptionDetailDTO dto) {
+            // Verificamos existencia antes de proceder
+            AdoptionDetail detail = adoptionDetailRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("No se puede actualizar. Detalle no encontrado"));
 
-        return adoptionDetailRepository.save(detail);
-    }
+            // Sincronizamos los cambios manuales (Place, Conditions, Issues, Notes)
+            detail.setPlace(dto.getPlace());
+            detail.setConditions(dto.getConditions());
+            detail.setIssues(dto.getIssues());
+            detail.setNotes(dto.getNotes());
 
+            return adoptionDetailMapper.toDto(adoptionDetailRepository.save(detail));
+        }
 
 
 }

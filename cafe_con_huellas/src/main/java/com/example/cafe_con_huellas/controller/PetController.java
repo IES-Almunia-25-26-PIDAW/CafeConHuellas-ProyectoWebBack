@@ -31,76 +31,35 @@ public class PetController {
 
     // -------------------- CRUD BÁSICO --------------------
 
-    /**
-     * Lista todas las mascotas con información resumida
-     * @return lista de PetSummaryDTO
-     */
+    // Obtiene el catálogo completo de mascotas en formato resumido
     @GetMapping
     public List<PetSummaryDTO> getAllPets() {
-        return petService.findAll()
-                .stream()
+        // Obtenemos los detalles del servicio y los convertimos a resumen para la galería principal
+        return petService.findAll().stream()
                 .map(petMapper::toSummaryDto)
                 .toList();
     }
 
-    /**
-     * Obtiene los detalles completos de una mascota por su ID
-     * @param id ID de la mascota
-     * @return PetDetailDTO con toda la información
-     */
+    // Obtiene la ficha detallada de una mascota específica por su ID
     @GetMapping("/{id}")
     public PetDetailDTO getPetById(@PathVariable @NotNull Long id) {
-        Pet pet = petService.findById(id);
-        return petMapper.toDetailDto(pet);
+        return petService.findById(id);
     }
 
-    /**
-     * Crea una nueva mascota en el sistema
-     * Validación: campos obligatorios en DTO
-     * @param petDetailDTO DTO con datos de la mascota
-     * @return PetDetailDTO de la mascota creada
-     */
+    // Registra una nueva mascota en el sistema
     @PostMapping
-    public ResponseEntity<PetDetailDTO> createPet(@Valid @RequestBody PetDetailDTO petDetailDTO) {
-        Pet pet = petMapper.toEntity(petDetailDTO);
-        Pet savedPet = petService.save(pet);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(petMapper.toDetailDto(savedPet));
+    @ResponseStatus(HttpStatus.CREATED)
+    public PetDetailDTO createPet(@Valid @RequestBody PetDetailDTO petDetailDTO) {
+        return petService.save(petDetailDTO);
     }
 
-    /**
-     * Actualiza los datos de una mascota existente
-     * @param id ID de la mascota
-     * @param petDetailDTO DTO con nuevos datos
-     * @return PetDetailDTO actualizado
-     */
+    // Actualiza la información técnica y descriptiva de una mascota existente
     @PutMapping("/{id}")
-    public PetDetailDTO updatePet(
-            @PathVariable @NotNull Long id,
-            @Valid @RequestBody PetDetailDTO petDetailDTO) {
-
-        Pet existingPet = petService.findById(id);
-
-        // Actualizamos los campos editables
-        existingPet.setName(petDetailDTO.getName());
-        existingPet.setDescription(petDetailDTO.getDescription());
-        existingPet.setBreed(petDetailDTO.getBreed());
-        // Se asume que el mapper maneja la conversión de String a Enum correctamente
-        existingPet.setCategory(petMapper.categoryFromString(petDetailDTO.getCategory()));
-        existingPet.setAge(petDetailDTO.getAge());
-        existingPet.setWeight(petDetailDTO.getWeight());
-        existingPet.setNeutered(petDetailDTO.getNeutered());
-        existingPet.setIsPpp(petDetailDTO.getIsPpp());
-        existingPet.setImageUrl(petDetailDTO.getImageUrl());
-
-        Pet updatedPet = petService.save(existingPet);
-        return petMapper.toDetailDto(updatedPet);
+    public PetDetailDTO updatePet(@PathVariable @NotNull Long id, @Valid @RequestBody PetDetailDTO petDetailDTO) {
+        return petService.updateBasicInfo(id, petDetailDTO);
     }
 
-    /**
-     * Elimina una mascota por su ID
-     * @param id ID de la mascota
-     */
+    // Elimina el registro de una mascota del sistema
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePet(@PathVariable @NotNull Long id) {
@@ -109,35 +68,20 @@ public class PetController {
 
     // -------------------- FILTROS --------------------
 
-    /**
-     * Filtra mascotas según si están esterilizadas o no
-     * @param neutered true o false
-     * @return lista de PetSummaryDTO
-     */
+    // Filtra el catálogo según el estado de esterilización
     @GetMapping("/filter/neutered")
     public List<PetSummaryDTO> getPetsByNeutered(@RequestParam Boolean neutered) {
-        return petService.findByNeutered(neutered)
-                .stream()
+        return petService.findByNeutered(neutered).stream()
                 .map(petMapper::toSummaryDto)
                 .toList();
     }
 
-    /**
-     * Filtra mascotas por categoría (GATO / PERRO)
-     * @param category texto de la categoría
-     * @return lista de PetSummaryDTO
-     */
+    // Filtra el catálogo por categoría (PERRO, GATO)
     @GetMapping("/filter/category")
     public List<PetSummaryDTO> getPetsByCategory(@RequestParam String category) {
-        // Convertimos el String a Enum usando el método del mapper
-        var categoryEnum = petMapper.categoryFromString(category);
-
-        // Pasamos el Enum al servicio que es lo que él espera
-        return petService.findByCategory(categoryEnum)
-                .stream()
+        return petService.findByCategory(category).stream()
                 .map(petMapper::toSummaryDto)
                 .toList();
     }
-
 
 }

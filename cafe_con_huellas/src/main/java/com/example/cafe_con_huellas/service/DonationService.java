@@ -1,14 +1,21 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.dto.DonationDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
+import com.example.cafe_con_huellas.mapper.DonationMapper;
 import com.example.cafe_con_huellas.model.entity.Donation;
+import com.example.cafe_con_huellas.model.entity.DonationCategory;
+import com.example.cafe_con_huellas.model.entity.User;
 import com.example.cafe_con_huellas.repository.DonationRepository;
+import com.example.cafe_con_huellas.repository.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 // Servicio encargado de la lógica de negocio relacionada con las donaciones
 @Service
@@ -16,31 +23,45 @@ import java.util.List;
 public class DonationService {
 
     private final DonationRepository donationRepository;
+    private final UserRepository userRepository;
+    private final DonationMapper donationMapper;
 
     // ---------- CRUD BÁSICO ----------
 
     // Devuelve todas las donaciones registradas
-    public List<Donation> findAll() {
-        return donationRepository.findAll();
+    public List<DonationDTO> findAll() {
+        return donationRepository.findAll().stream()
+                .map(donationMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     // Busca una donación por su ID
-    public Donation findById(Long id) {
+    public DonationDTO findById(Long id) {
         return donationRepository.findById(id)
+                .map(donationMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Donación no encontrada con ID: " + id));
     }
 
     // Registra una nueva donación
-    public Donation save(Donation donation) {
-        // Validación: No permitimos donaciones sin importe o negativas
-        if (donation.getAmount() == null || donation.getAmount().doubleValue() <= 0) {
-            throw new BadRequestException("El importe de la donación debe ser mayor que cero.");
+    @Transactional
+    public DonationDTO save(DonationDTO donationDto) {
+        // 1. Convertimos DTO a Entidad (vía Mapper)
+        Donation donation = donationMapper.toEntity(donationDto);
+
+        // 2. Lógica para el Usuario (Donación Anónima vs Registrada)
+        if (donationDto.getUserId() != null) {
+            User user = userRepository.findById(donationDto.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + donationDto.getUserId()));
+            donation.setUser(user);
+        } else {
+            // Si el userId es null, la relación 'user' en la entidad se queda como null (anónima)
+            donation.setUser(null);
         }
 
-        if (donation.getDate() == null) {
-            donation.setDate(LocalDateTime.now());
-        }
-        return donationRepository.save(donation);
+        // 3. Guardamos (La fecha y validaciones de negocio ya están en la Entity/DTO)
+        Donation savedDonation = donationRepository.save(donation);
+
+        return donationMapper.toDto(savedDonation);
     }
 
     // Elimina una donación por su ID
@@ -54,22 +75,35 @@ public class DonationService {
     // ---------- MÉTODOS ESPECÍFICOS ----------
 
     // Obtiene todas las donaciones realizadas por un usuario concreto
-    public List<Donation> findByUserId(Long userId) {
-        return donationRepository.findByUserId(userId);
+    public List<DonationDTO> findByUserId(Long userId) {
+        return donationRepository.findByUserId(userId).stream()
+                .map(donationMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Obtiene donaciones filtradas por tipo
-    public List<Donation> findByType(String type) {
-        return donationRepository.findByType(type);
+    // Obtiene donaciones filtradas por categoria
+    public List<DonationDTO> findByCategory(String category) {
+        // Convertimos el String que viene del Front a Enum para el Repository
+        try {
+            DonationCategory cat = DonationCategory.valueOf(category.toUpperCase());
+            return donationRepository.findByCategory(cat).stream()
+                    .map(donationMapper::toDto)
+                    .collect(Collectors.toList());
+        } catch (IllegalArgumentException e) {
+            throw new com.example.cafe_con_huellas.exception.BadRequestException("Categoría no válida: " + category);
+        }
     }
+
 
     // Calcula el total donado por un usuario
     public Double getTotalAmountByUser(Long userId) {
-        return donationRepository.sumAmountByUserId(userId);
+        Double total = donationRepository.sumAmountByUserId(userId);
+        return total != null ? total : 0.0;
     }
 
     // Calcula el total acumulado de todas las donaciones
     public Double getTotalDonationsAmount() {
-        return donationRepository.sumTotalAmount();
+        Double total = donationRepository.sumTotalAmount();
+        return total != null ? total : 0.0;
     }
 }

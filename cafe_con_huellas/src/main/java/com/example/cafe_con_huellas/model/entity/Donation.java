@@ -23,19 +23,39 @@ public class Donation {
     private Long id;
 
     // Relación que indica que un usuario puede realizar muchas donaciones
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
     // Fecha y hora exacta en la que se registró la donación
-    @Column(nullable = false)
+    @Column(nullable = false, insertable = false, updatable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime date;
 
-    // Define el tipo de donación (ej. "Efectivo", "Transferencia", "Alimento")
+    // Define el tipo de donación (ej. "Monetaria", "Material", "Alimento")
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String type;
+    private DonationCategory category;
+
+    // Define el método de donación (ej. "Transferencia", "Bizum", "Efectivo")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DonationMethod method;
 
     // Valor monetario o cantidad de la donación
     @Column(nullable = false)
     private Double amount;
+
+    // Notas adicionales
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    // Método que asegura que la fecha se asigne si no viene de la BD
+    @PrePersist
+    protected void onCreate() {
+        if (this.date == null) {
+            this.date = LocalDateTime.now();
+        }
+    }
+
+
 }
