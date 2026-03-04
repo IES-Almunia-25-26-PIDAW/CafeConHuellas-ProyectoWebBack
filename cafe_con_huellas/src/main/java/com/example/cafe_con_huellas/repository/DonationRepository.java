@@ -27,11 +27,11 @@ public interface DonationRepository extends JpaRepository<Donation,Long> {
 
     // Suma total donada por un usuario
     @Query("SELECT SUM(d.amount) FROM Donation d WHERE d.user.id = :userId")
-    Double sumAmountByUserId(Long userId);
+    java.math.BigDecimal sumAmountByUserId(Long userId);
 
     // Suma total de todas las donaciones
     @Query("SELECT SUM(d.amount) FROM Donation d")
-    Double sumTotalAmount();
+    java.math.BigDecimal sumTotalAmount();
 
     // Buscar todas las donaciones anónimas donde user_id es null
     List<Donation> findByUserIsNull();

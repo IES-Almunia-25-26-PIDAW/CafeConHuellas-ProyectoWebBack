@@ -51,6 +51,10 @@ public class UserService {
         // Nota: El password debería gestionarse en un DTO de Registro aparte o
         // asegurar que el mapper lo trate si viene en el JSON inicial.
 
+        // AÑADO ESTA LÍNA PARA PRUEBAS DE SWAGGER, LUEGO ENCRIPTAREMOS Y LE DAREMOS SEGURIDAD A LA CONTRASEÑA
+        user.setPassword("123456");
+
+
         return userMapper.toDetailDto(userRepository.save(user));
     }
 

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -96,14 +97,14 @@ public class DonationService {
 
 
     // Calcula el total donado por un usuario
-    public Double getTotalAmountByUser(Long userId) {
-        Double total = donationRepository.sumAmountByUserId(userId);
-        return total != null ? total : 0.0;
+    public BigDecimal getTotalAmountByUser(Long userId) {
+        BigDecimal total = donationRepository.sumAmountByUserId(userId);
+        return total != null ? total : BigDecimal.ZERO;
     }
 
     // Calcula el total acumulado de todas las donaciones
-    public Double getTotalDonationsAmount() {
-        Double total = donationRepository.sumTotalAmount();
-        return total != null ? total : 0.0;
+    public BigDecimal getTotalDonationsAmount() {
+        BigDecimal total = donationRepository.sumTotalAmount();
+        return total != null ? total : BigDecimal.ZERO;
     }
 }

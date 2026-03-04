@@ -37,6 +37,13 @@ public class UserController {
         return userService.findById(id);
     }
 
+    // Crea un nuevo usuario en el sistema
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserDetailDTO registerUser(@Valid @RequestBody UserDetailDTO userDetailDTO) {
+        return userService.register(userDetailDTO);
+    }
+
     /* Actualiza la información personal del usuario.
      * Se utiliza un método controlado en el service para no sobrescribir la contraseña.
      */

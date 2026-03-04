@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 // DTO para donaciones
@@ -41,7 +42,7 @@ public class DonationDTO {
     @DecimalMin(value = "1.00", message = "La donación mínima permitida es de 1.00 €")
     @DecimalMax(value = "5000.00", message = "Para donaciones mayores a 5,000 € contacte con el refugio")
     @Digits(integer = 4, fraction = 2, message = "Se permiten hasta 4 dígitos y un máximo de 2 decimales (ej: 9999.99)")
-    private Double amount;
+    private BigDecimal amount;
 
     // Notas adicionales
     @Size(max = 1000, message = "Las notas no pueden superar los 1000 caracteres")

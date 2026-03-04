@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 // Representa una donación realizada por un usuario en el sistema
@@ -43,7 +44,7 @@ public class Donation {
 
     // Valor monetario o cantidad de la donación
     @Column(nullable = false)
-    private Double amount;
+    private BigDecimal amount;
 
     // Notas adicionales
     @Column(columnDefinition = "TEXT")

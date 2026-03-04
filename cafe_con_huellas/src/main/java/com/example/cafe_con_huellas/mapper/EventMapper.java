@@ -2,12 +2,14 @@ package com.example.cafe_con_huellas.mapper;
 
 import com.example.cafe_con_huellas.dto.EventDTO;
 import com.example.cafe_con_huellas.model.entity.Event;
+import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /*
  * Mapper para la gestión de eventos del refugio.
  * Realiza la conversión entre la entidad Event y su DTO correspondiente.
  */
+@Mapper(componentModel = "spring")
 public interface EventMapper {
 
     // Convierte la entidad de la base de datos a un DTO para el Frontend

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 // Representa a una mascota disponible en el sistema
@@ -42,7 +43,7 @@ public class Pet {
     private Integer age;
 
     @Column(nullable = false)
-    private Double weight;
+    private BigDecimal weight;
 
     // Indica si está esterilizado (true/false)
     @Column(nullable = false)

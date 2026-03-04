@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /* Controlador REST para la gestión de donaciones económicas.
@@ -65,13 +66,13 @@ public class DonationController {
 
     // Estadísticas: Total por usuario
     @GetMapping("/user/{userId}/total")
-    public Double getTotalByUser(@PathVariable Long userId) {
+    public BigDecimal getTotalByUser(@PathVariable Long userId) {
         return donationService.getTotalAmountByUser(userId);
     }
 
     // Estadísticas: Total global
     @GetMapping("/total")
-    public Double getTotalGlobal() {
+    public BigDecimal getTotalGlobal() {
         return donationService.getTotalDonationsAmount();
     }
 
