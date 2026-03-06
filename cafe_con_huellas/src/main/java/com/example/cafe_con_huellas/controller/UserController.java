@@ -1,5 +1,6 @@
 package com.example.cafe_con_huellas.controller;
 
+import com.example.cafe_con_huellas.dto.RegisterDTO;
 import com.example.cafe_con_huellas.dto.UserDetailDTO;
 import com.example.cafe_con_huellas.dto.UserSummaryDTO;
 import com.example.cafe_con_huellas.mapper.UserMapper;
@@ -37,11 +38,11 @@ public class UserController {
         return userService.findById(id);
     }
 
-    // Crea un nuevo usuario en el sistema
+    // Endpoint de registro: recibe RegisterDTO con contraseña, devuelve UserDetailDTO sin ella
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDetailDTO registerUser(@Valid @RequestBody UserDetailDTO userDetailDTO) {
-        return userService.register(userDetailDTO);
+    public UserDetailDTO registerUser(@Valid @RequestBody RegisterDTO registerDTO) {
+        return userService.register(registerDTO);
     }
 
     /* Actualiza la información personal del usuario.

@@ -42,6 +42,11 @@ public class EventService {
     // Registra o actualiza un evento recibiendo un DTO
     @Transactional
     public EventDTO save(EventDTO eventDTO) {
+        if (eventDTO.getId() != null) {
+            if (!eventRepository.existsById(eventDTO.getId())) {
+                throw new ResourceNotFoundException("No se puede actualizar. Evento no encontrado con ID: " + eventDTO.getId());
+            }
+        }
         // Convertimos el DTO a Entidad mediante el Mapper
         Event event = eventMapper.toEntity(eventDTO);
 

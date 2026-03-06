@@ -6,6 +6,7 @@ import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.mapper.AdoptionDetailMapper;
 import com.example.cafe_con_huellas.model.entity.AdoptionDetail;
 import com.example.cafe_con_huellas.repository.AdoptionDetailRepository;
+import com.example.cafe_con_huellas.repository.UserPetRelationshipRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ public class AdoptionDetailService {
 
         private final AdoptionDetailRepository adoptionDetailRepository;
         private final AdoptionDetailMapper adoptionDetailMapper;
-
+        private final UserPetRelationshipRepository relationshipRepository;
         // ---------- CRUD BÁSICO ----------
 
         // Obtiene todos los registros de detalles de adopción convertidos a DTO
@@ -41,15 +42,22 @@ public class AdoptionDetailService {
         // Registra un nuevo detalle de adopción validando que no exista duplicidad en la relación
         @Transactional
         public AdoptionDetailDTO save(AdoptionDetailDTO dto) {
-            // Validación: Usamos el método del repositorio para evitar duplicados en la misma relación
+            // Validación de duplicados. Usamos el método del repositorio para evitar duplicados en la misma relación
             if (dto.getId() == null && adoptionDetailRepository.existsByRelationshipId(dto.getUserPetRelationshipId())) {
-                throw new BadRequestException("Ya existen detalles registrados para esta relación de adopción.");
+                throw new BadRequestException("Ya existen detalles registrados para esta relación.");
             }
 
-            // Convertimos el DTO a Entidad, guardamos y devolvemos el DTO resultante
-            AdoptionDetail entity = adoptionDetailMapper.toEntity(dto);
-            AdoptionDetail savedEntity = adoptionDetailRepository.save(entity);
+            // Buscar el objeto padre real
+            var relationship = relationshipRepository.findById(dto.getUserPetRelationshipId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Relación no encontrada con ID: " + dto.getUserPetRelationshipId()));
 
+            // Convertir dto a entidad
+            AdoptionDetail entity = adoptionDetailMapper.toEntity(dto);
+
+            // Asignar objeto completo
+            entity.setRelationship(relationship);
+
+            AdoptionDetail savedEntity = adoptionDetailRepository.save(entity);
             return adoptionDetailMapper.toDto(savedEntity);
         }
 

@@ -107,4 +107,36 @@ public class DonationService {
         BigDecimal total = donationRepository.sumTotalAmount();
         return total != null ? total : BigDecimal.ZERO;
     }
+
+
+    // Actualizar donación
+    @Transactional
+    public DonationDTO updateDonation(DonationDTO donationDto) {
+        if (donationDto.getId() != null) {
+            if (!donationRepository.existsById(donationDto.getId())) {
+                throw new ResourceNotFoundException("No se puede actualizar. Donación no encontrada con ID: " + donationDto.getId());
+            }
+        }
+
+        // Convertimos DTO a Entidad
+        Donation donation = donationMapper.toEntity(donationDto);
+
+        // Lógica para el Usuario (Donación Anónima vs Registrada)
+        if (donationDto.getUserId() != null) {
+            User user = userRepository.findById(donationDto.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + donationDto.getUserId()));
+            donation.setUser(user);
+        } else {
+            donation.setUser(null);
+        }
+
+        // Guardamos la entidad
+        Donation savedDonation = donationRepository.save(donation);
+
+        // Retornamos el DTO (Siguiendo el flujo: Entity -> DTO)
+        return donationMapper.toDto(savedDonation);
+    }
+
+
+
 }

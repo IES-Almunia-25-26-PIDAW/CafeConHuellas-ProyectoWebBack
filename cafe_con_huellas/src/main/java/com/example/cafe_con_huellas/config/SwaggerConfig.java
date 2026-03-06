@@ -1,0 +1,36 @@
+package com.example.cafe_con_huellas.config;
+
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+// Configuración de Swagger con soporte JWT global
+@Configuration
+@SecurityScheme(
+        name = "bearerAuth",
+        type = SecuritySchemeType.HTTP,
+        scheme = "bearer",
+        bearerFormat = "JWT"
+)
+public class SwaggerConfig {
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        // Añadimos el esquema de seguridad a TODOS los endpoints automáticamente
+        SecurityRequirement securityRequirement = new SecurityRequirement()
+                .addList("bearerAuth");
+
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Café con Huellas API")
+                        .version("1.0")
+                        .description("API REST para la gestión del refugio de animales")
+                )
+                // Esto hace que Swagger envíe el token en todas las peticiones
+                .addSecurityItem(securityRequirement);
+    }
+}

@@ -1,5 +1,6 @@
 package com.example.cafe_con_huellas.service;
 
+import com.example.cafe_con_huellas.dto.RegisterDTO;
 import com.example.cafe_con_huellas.dto.UserDetailDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
@@ -7,6 +8,7 @@ import com.example.cafe_con_huellas.mapper.UserMapper;
 import com.example.cafe_con_huellas.model.entity.Role;
 import com.example.cafe_con_huellas.model.entity.User;
 import com.example.cafe_con_huellas.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,10 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+
+    // Encriptador de contraseñas
+    private final PasswordEncoder passwordEncoder;
+
 
     // ---------- CRUD BÁSICO ----------
 
@@ -40,21 +46,37 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + id));
     }
 
-    // Registra un nuevo usuario validando que el email no exista
+
+    // Registra un nuevo usuario encriptando su contraseña antes de persistir y validando que el email no exista
     @Transactional
-    public UserDetailDTO register(UserDetailDTO dto) {
+    public UserDetailDTO register(RegisterDTO dto) {
+
+        // Bloqueamos el registro si el email ya existe en la BD
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new BadRequestException("El email " + dto.getEmail() + " ya está registrado.");
         }
 
-        User user = userMapper.toEntity(dto);
-        // Nota: El password debería gestionarse en un DTO de Registro aparte o
-        // asegurar que el mapper lo trate si viene en el JSON inicial.
+        // Construimos la entidad manualmente para controlar qué campos se asignan
+        User user = new User();
+        user.setFirstName(dto.getFirstName());
+        user.setLastName1(dto.getLastName1());
+        user.setLastName2(dto.getLastName2());
+        user.setEmail(dto.getEmail());
+        user.setPhone(dto.getPhone());
+        user.setImageUrl(dto.getImageUrl());
 
-        // AÑADO ESTA LÍNA PARA PRUEBAS DE SWAGGER, LUEGO ENCRIPTAREMOS Y LE DAREMOS SEGURIDAD A LA CONTRASEÑA
-        user.setPassword("123456");
+        // BCrypt transforma "micontraseña" en algo como "$2a$10$xyz..."
+        // Es irreversible: nunca se puede recuperar la contraseña original
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
 
+        // Asignamos rol desde el DTO o USER por defecto si no viene
+        if (dto.getRole() != null) {
+            user.setRole(userMapper.roleFromString(dto.getRole()));
+        } else {
+            user.setRole(Role.USER);
+        }
 
+        // Guardamos y devolvemos el perfil sin exponer la contraseña
         return userMapper.toDetailDto(userRepository.save(user));
     }
 
