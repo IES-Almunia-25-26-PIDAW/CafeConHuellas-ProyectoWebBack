@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.security.Key;
 import java.util.Date;
@@ -18,11 +19,12 @@ import java.util.function.Function;
 public class JwtService {
 
     // Clave secreta para firmar los tokens (mínimo 256 bits para HS256)
-    // En producción esto iría en application.properties o variable de entorno
-    private static final String SECRET_KEY = "cafe_con_huellas_clave_secreta_super_segura_2024";
+    // Las leemos desde application.properties
+    @Value("${app.jwt.secret}")
+    private String secretKey;
 
-    // Tiempo de expiración del token: 24 horas en milisegundos
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
+    @Value("${app.jwt.expiration}")
+    private long expirationTime;
 
     // Genera un token JWT para el usuario recibido
     public String generateToken(String email) {
@@ -32,18 +34,15 @@ public class JwtService {
     // Genera un token con claims extra (por ejemplo el rol del usuario)
     public String generateToken(Map<String, Object> extraClaims, String email) {
         return Jwts.builder()
-                // Añadimos datos extra como el rol
                 .setClaims(extraClaims)
-                // El "subject" es el identificador principal, usamos el email
                 .setSubject(email)
-                // Fecha de creación del token
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                // Fecha de expiración
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                // Firmamos con nuestra clave secreta
+                // Usamos expirationTime desde properties
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
 
     // Extrae el email (subject) del token
     public String extractEmail(String token) {
@@ -85,6 +84,7 @@ public class JwtService {
 
     // Convierte la clave secreta en un objeto Key válido para JWT
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        // Usamos secretKey desde properties
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 }

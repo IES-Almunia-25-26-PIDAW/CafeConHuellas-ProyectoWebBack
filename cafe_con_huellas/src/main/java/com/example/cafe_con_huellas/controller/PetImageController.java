@@ -7,6 +7,7 @@ import com.example.cafe_con_huellas.service.PetImageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,23 +44,29 @@ public class PetImageController {
     /* * Registra una nueva foto en la galería de una mascota.
      * Recibe la URL y el ID de la mascota dentro del DTO.
      */
+    // Solo ADMIN puede añadir fotos a una mascota
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public PetImageDTO addImage(@Valid @RequestBody PetImageDTO dto) {
         // Delegamos la validación de la mascota y el mapeo al Service
         return petImageService.save(dto);
     }
 
-    // Elimina una foto específica de la galería del sistema
+
+    // Solo ADMIN puede eliminar una foto concreta
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteImage(@PathVariable Long id) {
         petImageService.deleteById(id);
     }
 
     // Elimina todas las fotos asociadas a una mascota de forma masiva
+    // Solo ADMIN puede eliminar todas las fotos de una mascota
     @DeleteMapping("/pet/{petId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteByPetId(@PathVariable Long petId) {
         petImageService.deleteByPetId(petId);
     }

@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,21 +48,27 @@ public class PetController {
     }
 
     // Registra una nueva mascota en el sistema
+    // Solo ADMIN puede crear mascotas
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public PetDetailDTO createPet(@Valid @RequestBody PetDetailDTO petDetailDTO) {
         return petService.save(petDetailDTO);
     }
 
     // Actualiza la información técnica y descriptiva de una mascota existente
+    // Solo ADMIN puede actualizar mascotas
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public PetDetailDTO updatePet(@PathVariable @NotNull Long id, @Valid @RequestBody PetDetailDTO petDetailDTO) {
         return petService.updateBasicInfo(id, petDetailDTO);
     }
 
     // Elimina el registro de una mascota del sistema
+    // Solo ADMIN puede eliminar mascotas
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deletePet(@PathVariable @NotNull Long id) {
         petService.deleteById(id);
     }

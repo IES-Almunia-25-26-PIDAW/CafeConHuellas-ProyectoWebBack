@@ -5,6 +5,7 @@ import com.example.cafe_con_huellas.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,22 +34,28 @@ public class EventController {
     }
 
     // Registra un nuevo evento en el sistema
+    // Solo ADMIN puede crear eventos
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public EventDTO createEvent(@Valid @RequestBody EventDTO eventDTO) {
         return eventService.save(eventDTO);
     }
 
     // Actualiza un evento existente (usamos el mismo método save del service)
+    // Solo ADMIN puede actualizar eventos
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public EventDTO updateEvent(@PathVariable Long id, @Valid @RequestBody EventDTO eventDTO) {
         eventDTO.setId(id); // Nos aseguramos de actualizar el ID correcto
         return eventService.save(eventDTO);
     }
 
     // Elimina un evento de la base de datos
+    // Solo ADMIN puede eliminar eventos
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteEvent(@PathVariable Long id) {
         eventService.deleteById(id);
     }

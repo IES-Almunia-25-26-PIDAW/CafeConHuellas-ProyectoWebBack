@@ -7,6 +7,7 @@ import com.example.cafe_con_huellas.service.DonationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -23,13 +24,17 @@ public class DonationController {
     private final DonationService donationService;
 
     // Devuelve el listado completo de todas las donaciones registradas
+    // Solo ADMIN puede ver todas las donaciones
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<DonationDTO> getAllDonations() {
         return donationService.findAll();
     }
 
     // Obtener una donación por ID
+    // Solo ADMIN puede ver una donación concreta
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public DonationDTO getDonationById(@PathVariable Long id) {
         return donationService.findById(id);
     }
@@ -37,6 +42,7 @@ public class DonationController {
     // Eliminar una donación
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteDonation(@PathVariable Long id) {
         donationService.deleteById(id);
     }
@@ -59,12 +65,15 @@ public class DonationController {
     }
 
     // Obtener donaciones por categoría
+    // Solo ADMIN puede ver donaciones por categoría
     @GetMapping("/category/{category}")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<DonationDTO> getDonationsByCategory(@PathVariable String category) {
         return donationService.findByCategory(category);
     }
 
     // Estadísticas: Total por usuario
+    // Cualquier usuario autenticado puede ver su total donado
     @GetMapping("/user/{userId}/total")
     public BigDecimal getTotalByUser(@PathVariable Long userId) {
         return donationService.getTotalAmountByUser(userId);
@@ -72,6 +81,7 @@ public class DonationController {
 
     // Estadísticas: Total global
     @GetMapping("/total")
+    @PreAuthorize("hasRole('ADMIN')")
     public BigDecimal getTotalGlobal() {
         return donationService.getTotalDonationsAmount();
     }

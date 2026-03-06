@@ -7,6 +7,7 @@ import com.example.cafe_con_huellas.service.UserPetRelationshipService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,19 +23,25 @@ public class UserPetRelationshipController {
     private final UserPetRelationshipService relationshipService;
 
     // Lista todos los vínculos registrados en el sistema (historial y activos)
+    // Solo ADMIN puede ver todos los vínculos del sistema
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserPetRelationshipDTO> getAllRelationships() {
         return relationshipService.findAll();
     }
 
     // Busca una relación específica mediante su identificador único
+    // Solo ADMIN puede ver una relación concreta por ID
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public UserPetRelationshipDTO getRelationshipById(@PathVariable Long id) {
         return relationshipService.findById(id);
     }
 
     // Filtra y devuelve solo los procesos que están marcados como activos actualmente
+    // Solo ADMIN puede ver los procesos activos del refugio
     @GetMapping("/active")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserPetRelationshipDTO> getActiveRelationships() {
         return relationshipService.findActiveRelationships();
     }
@@ -51,11 +58,12 @@ public class UserPetRelationshipController {
         return relationshipService.findByPetId(petId);
     }
 
-    /* * Registra un nuevo vínculo (ej. se inicia un proceso de adopción o acogida).
-     * El servicio valida automáticamente la disponibilidad de la mascota.
-     */
+
+    // Solo ADMIN puede registrar un nuevo vínculo (adopción, acogida...)
+    // El servicio valida automáticamente la disponibilidad de la mascota
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public UserPetRelationshipDTO createRelationship(@Valid @RequestBody UserPetRelationshipDTO dto) {
         return relationshipService.save(dto);
     }
@@ -63,15 +71,19 @@ public class UserPetRelationshipController {
     /* * Finaliza una relación activa (ej. marcar el fin de una casa de acogida o paseo).
      * Establece el estado 'active' a false y asigna la fecha de cierre.
      */
+    // Solo ADMIN puede finalizar una relación activa
     @PatchMapping("/{id}/end")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void endRelationship(@PathVariable Long id) {
         relationshipService.endRelationship(id, null);
     }
 
     // Elimina un registro de relación (Solo para correcciones administrativas)
+    // Solo ADMIN puede eliminar un registro de relación
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteRelationship(@PathVariable Long id) {
         relationshipService.deleteById(id);
     }

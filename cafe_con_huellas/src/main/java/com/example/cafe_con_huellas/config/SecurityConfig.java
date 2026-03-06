@@ -15,7 +15,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
+// Activamos la seguridad a nivel de método para poder usar @PreAuthorize
+@EnableMethodSecurity
 // Configuración central de Spring Security
 @Configuration
 @RequiredArgsConstructor
@@ -60,9 +63,11 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        // Rutas públicas: login, registro y Swagger
+                        // Rutas públicas: login, registro, Swagger y formulario de adopción
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/adoption-form/validate/**",
+                                "/api/adoption-form/submit/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html"

@@ -7,6 +7,7 @@ import com.example.cafe_con_huellas.service.PetVaccineService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,8 +38,10 @@ public class PetVaccineController {
     /** * Registra la administración de una nueva vacuna.
      * Vincula una mascota con una vacuna específica y la fecha de aplicación.
      */
+    // Solo ADMIN puede registrar una nueva vacuna administrada a una mascota
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public PetVaccineDTO addVaccineToPet(@Valid @RequestBody PetVaccineDTO dto) {
         // Pasamos el DTO directamente, el servicio se encarga de las validaciones y el mapeo
         return petVaccineService.save(dto);
@@ -47,7 +50,9 @@ public class PetVaccineController {
     /**
      * Actualiza la información médica de un registro de vacunación (notas o próxima dosis).
      */
+    // Solo ADMIN puede actualizar información médica de un registro de vacunación
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public PetVaccineDTO updateVaccineRecord(@PathVariable Long id, @Valid @RequestBody PetVaccineDTO dto) {
         return petVaccineService.updateMedicalInfo(id, dto);
     }
@@ -55,8 +60,10 @@ public class PetVaccineController {
     /**
      * Elimina un registro de vacunación por su ID del historial de la mascota.
      */
+    // Solo ADMIN puede eliminar un registro de vacunación
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void removeVaccineRecord(@PathVariable Long id) {
         petVaccineService.deleteById(id);
     }
