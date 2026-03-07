@@ -31,7 +31,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserSummaryDTO> getAllUsers() {
         return userService.findAll().stream()
-                .map(userMapper::toSummaryDto)
+                .map((UserDetailDTO dto) -> userMapper.toSummaryDto(dto))
                 .toList();
     }
 

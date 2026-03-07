@@ -37,7 +37,7 @@ public class PetController {
     public List<PetSummaryDTO> getAllPets() {
         // Obtenemos los detalles del servicio y los convertimos a resumen para la galería principal
         return petService.findAll().stream()
-                .map(petMapper::toSummaryDto)
+                .map((PetDetailDTO dto) -> petMapper.toSummaryDto(dto))
                 .toList();
     }
 
@@ -79,7 +79,7 @@ public class PetController {
     @GetMapping("/filter/neutered")
     public List<PetSummaryDTO> getPetsByNeutered(@RequestParam Boolean neutered) {
         return petService.findByNeutered(neutered).stream()
-                .map(petMapper::toSummaryDto)
+                .map((PetDetailDTO dto) -> petMapper.toSummaryDto(dto))
                 .toList();
     }
 
@@ -87,8 +87,7 @@ public class PetController {
     @GetMapping("/filter/category")
     public List<PetSummaryDTO> getPetsByCategory(@RequestParam String category) {
         return petService.findByCategory(category).stream()
-                .map(petMapper::toSummaryDto)
+                .map((PetDetailDTO dto) -> petMapper.toSummaryDto(dto))
                 .toList();
     }
-
 }
