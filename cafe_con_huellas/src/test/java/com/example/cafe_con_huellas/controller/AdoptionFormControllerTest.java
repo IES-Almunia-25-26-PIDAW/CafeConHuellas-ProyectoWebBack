@@ -1,11 +1,13 @@
 package com.example.cafe_con_huellas.controller;
 
 import com.example.cafe_con_huellas.config.SecurityConfig;
+import com.example.cafe_con_huellas.dto.AdoptionRequestDTO;
 import com.example.cafe_con_huellas.model.entity.AdoptionFormToken;
 import com.example.cafe_con_huellas.model.entity.Pet;
 import com.example.cafe_con_huellas.model.entity.User;
 import com.example.cafe_con_huellas.security.JwtService;
 import com.example.cafe_con_huellas.service.AdoptionFormTokenService;
+import com.example.cafe_con_huellas.service.AdoptionRequestService;
 import com.example.cafe_con_huellas.service.EmailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockito.Mockito.*;
@@ -40,6 +43,9 @@ class AdoptionFormControllerTest {
 
     @MockitoBean
     private AdoptionFormTokenService tokenService;
+
+    @MockitoBean
+    private AdoptionRequestService adoptionRequestService;
 
     @MockitoBean
     private EmailService emailService;
@@ -113,18 +119,23 @@ class AdoptionFormControllerTest {
     @DisplayName("POST /api/adoption-form/submit/{token} con token válido envía formulario y devuelve 204")
     void shouldSubmitAdoptionFormPublicly() throws Exception {
         when(tokenService.validateToken("abc123")).thenReturn(buildToken());
+        when(adoptionRequestService.save(any(), any())).thenReturn(new AdoptionRequestDTO());
         doNothing().when(emailService).notifyAdminAdoptionRequest(any(), any(), any());
         doNothing().when(emailService).confirmAdoptionRequestToUser(any(), any(), any());
         doNothing().when(tokenService).markTokenAsUsed("abc123");
 
-        Map<String, String> request = Map.of(
-                "address", "Calle Mayor 1",
-                "city", "Jerez",
-                "housingType", "PISO",
-                "hasGarden", "NO",
-                "hasOtherPets", "NO",
-                "additionalInfo", "Tengo experiencia con perros"
-        );
+        Map<String, Object> request = new HashMap<>();
+        request.put("address", "Calle Mayor 1");
+        request.put("city", "Jerez");
+        request.put("housingType", "PISO");
+        request.put("hasGarden", "false");
+        request.put("hasOtherPets", "false");
+        request.put("hasChildren", "false");
+        request.put("hoursAlonePerDay", 4);
+        request.put("experienceWithPets", "true");
+        request.put("reasonForAdoption", "Quiero darle un hogar a un perro que lo necesite");
+        request.put("agreesToFollowUp", "true");
+        request.put("additionalInfo", "Tengo experiencia con perros");
 
         mockMvc.perform(post("/api/adoption-form/submit/abc123")
                         .contentType(MediaType.APPLICATION_JSON)

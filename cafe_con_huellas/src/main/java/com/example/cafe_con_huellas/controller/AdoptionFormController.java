@@ -1,7 +1,9 @@
 package com.example.cafe_con_huellas.controller;
 
+import com.example.cafe_con_huellas.dto.AdoptionRequestDTO;
 import com.example.cafe_con_huellas.model.entity.AdoptionFormToken;
 import com.example.cafe_con_huellas.service.AdoptionFormTokenService;
+import com.example.cafe_con_huellas.service.AdoptionRequestService;
 import com.example.cafe_con_huellas.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdoptionFormController {
 
     private final AdoptionFormTokenService tokenService;
+    private final AdoptionRequestService adoptionRequestService; // NUEVO
     private final EmailService emailService;
 
     // Endpoint protegido: el admin envía el formulario a un usuario interesado
@@ -59,6 +62,23 @@ public class AdoptionFormController {
         // Validamos el token antes de procesar el formulario
         AdoptionFormToken formToken = tokenService.validateToken(token);
 
+        // Construimos el DTO y guardamos la solicitud en base de datos
+        AdoptionRequestDTO dto = AdoptionRequestDTO.builder()
+                .address(request.address())
+                .city(request.city())
+                .housingType(request.housingType())
+                .hasGarden(Boolean.parseBoolean(request.hasGarden()))
+                .hasOtherPets(Boolean.parseBoolean(request.hasOtherPets()))
+                .hasChildren(Boolean.parseBoolean(request.hasChildren()))
+                .hoursAlonePerDay(request.hoursAlonePerDay())
+                .experienceWithPets(Boolean.parseBoolean(request.experienceWithPets()))
+                .reasonForAdoption(request.reasonForAdoption())
+                .agreesToFollowUp(Boolean.parseBoolean(request.agreesToFollowUp()))
+                .additionalInfo(request.additionalInfo())
+                .build();
+
+        adoptionRequestService.save(token, dto);
+
         // Notificamos al admin con los datos del formulario rellenado
         emailService.notifyAdminAdoptionRequest(
                 formToken.getUser().getFirstName() + " " + formToken.getUser().getLastName1(),
@@ -87,12 +107,18 @@ public class AdoptionFormController {
     ) {}
 
     // DTO interno con los datos que rellena el usuario en el formulario
+    // Mantenemos String para los booleanos por compatibilidad con el frontend
     record AdoptionFormRequest(
             String address,
             String city,
             String housingType,
             String hasGarden,
             String hasOtherPets,
+            String hasChildren,
+            Integer hoursAlonePerDay,
+            String experienceWithPets,
+            String reasonForAdoption,
+            String agreesToFollowUp,
             String additionalInfo
     ) {}
 }

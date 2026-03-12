@@ -49,6 +49,11 @@ public class AdoptionFormToken {
     @Column(nullable = false)
     private Boolean used;
 
+    // Relacion 1-1: Solicitud generada cuando el usuario rellena el formulario
+    // mappedBy indica que AdoptionRequest es el lado dueño de la relación
+    @OneToOne(mappedBy = "formToken")
+    private AdoptionRequest adoptionRequest;
+
     // Asigna automáticamente los valores al crear el token
     @PrePersist
     protected void onCreate() {
