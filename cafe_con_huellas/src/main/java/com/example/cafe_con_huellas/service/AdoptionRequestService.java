@@ -15,7 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+/**
+ * Servicio encargado de la lógica de negocio de las solicitudes de adopción.
+ * <p>
+ * Gestiona el ciclo de vida de las solicitudes recibidas a través del formulario
+ * público, permitiendo consultarlas y cambiar su estado.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class AdoptionRequestService {
@@ -24,7 +30,12 @@ public class AdoptionRequestService {
     private final AdoptionRequestMapper requestMapper;
     private final AdoptionFormTokenRepository tokenRepository;
 
-    // Guarda la solicitud cuando el usuario envía el formulario
+    /**
+     * Persiste una nueva solicitud de adopción a partir del token y el formulario cumplimentado.
+     *
+     * @param token token UUID que identifica al usuario y la mascota
+     * @param dto   datos del formulario rellenado por el usuario
+     */
     @Transactional
     public AdoptionRequestDTO save(String token, AdoptionRequestDTO dto) {
 
@@ -42,7 +53,11 @@ public class AdoptionRequestService {
         return requestMapper.toDto(requestRepository.save(entity));
     }
 
-    // Lista todas las solicitudes (el admin ve todo)
+    /**
+     * Obtiene todas las solicitudes de adopción convertidas a DTO.
+     *
+     * @return lista de {@link AdoptionRequestDTO} con todos los registros
+     */
     @Transactional(readOnly = true)
     public List<AdoptionRequestDTO> findAll() {
         return requestRepository.findAll().stream()
@@ -50,7 +65,12 @@ public class AdoptionRequestService {
                 .collect(Collectors.toList());
     }
 
-    // Filtra por estado: PENDIENTE, APROBADA, DENEGADA
+    /**
+     * Filtra las solicitudes por su estado actual.
+     *
+     * @param status estado por el que filtrar ({@link AdoptionRequestStatus})
+     * @return lista de {@link AdoptionRequestDTO} con el estado indicado
+     */
     @Transactional(readOnly = true)
     public List<AdoptionRequestDTO> findByStatus(AdoptionRequestStatus status) {
         return requestRepository.findByStatus(status).stream()
@@ -58,7 +78,13 @@ public class AdoptionRequestService {
                 .collect(Collectors.toList());
     }
 
-    // Detalle de una solicitud concreta
+    /**
+     * Busca una solicitud concreta por su identificador.
+     *
+     * @param id identificador único de la solicitud
+     * @return {@link AdoptionRequestDTO} con los datos de la solicitud
+     * @throws ResourceNotFoundException si no existe la solicitud con ese ID
+     */
     @Transactional(readOnly = true)
     public AdoptionRequestDTO findById(Long id) {
         return requestRepository.findById(id)
@@ -66,7 +92,14 @@ public class AdoptionRequestService {
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitud no encontrada con ID: " + id));
     }
 
-    // El admin aprueba o rechaza la solicitud
+    /**
+     * Actualiza el estado de una solicitud (aprobar o rechazar).
+     *
+     * @param id        identificador de la solicitud a actualizar
+     * @param newStatus nuevo estado a asignar ({@link AdoptionRequestStatus})
+     * @return {@link AdoptionRequestDTO} con el estado actualizado
+     * @throws ResourceNotFoundException si no existe la solicitud con ese ID
+     */
     @Transactional
     public AdoptionRequestDTO updateStatus(Long id, AdoptionRequestStatus newStatus) {
         AdoptionRequest request = requestRepository.findById(id)

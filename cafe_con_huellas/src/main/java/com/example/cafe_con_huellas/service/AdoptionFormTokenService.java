@@ -16,7 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-// Servicio que gestiona la creación y validación de tokens únicos para formularios de adopción
+/**
+ * Servicio encargado de la creación y validación de tokens únicos para formularios de adopción.
+ * <p>
+ * Genera un UUID por cada solicitud, lo persiste con fecha de expiración
+ * y envía el enlace al usuario por email. Garantiza que cada token
+ * solo pueda usarse una vez.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class AdoptionFormTokenService {
@@ -30,7 +37,18 @@ public class AdoptionFormTokenService {
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-    // Genera un token único, lo guarda en BD y envía el enlace por correo al usuario
+    /**
+     * Genera un token único, lo persiste en base de datos y envía el enlace al usuario por email.
+     * <p>
+     * Verifica que el usuario y la mascota existan y que no haya ya
+     * un formulario activo pendiente para esa combinación.
+     * </p>
+     *
+     * @param userId identificador del usuario destinatario
+     * @param petId  identificador de la mascota
+     * @throws ResourceNotFoundException si el usuario o la mascota no existen
+     * @throws BadRequestException si ya existe un formulario activo para esa combinación
+     */
     @Transactional
     public void generateAndSendFormToken(Long userId, Long petId) {
 
@@ -71,7 +89,14 @@ public class AdoptionFormTokenService {
         );
     }
 
-    // Valida que el token existe, no ha expirado y no ha sido usado
+    /**
+     * Valida que el token sea correcto, no haya expirado y no haya sido utilizado.
+     *
+     * @param token token UUID recibido desde el enlace del email
+     * @return {@link AdoptionFormToken} con los datos del token validado
+     * @throws ResourceNotFoundException si el token no existe
+     * @throws BadRequestException si el token ha expirado o ya fue usado
+     */
     @Transactional(readOnly = true)
     public AdoptionFormToken validateToken(String token) {
 
@@ -92,7 +117,12 @@ public class AdoptionFormTokenService {
         return formToken;
     }
 
-    // Marca el token como usado una vez el formulario ha sido enviado
+    /**
+     * Marca un token como utilizado para evitar envíos duplicados del formulario.
+     *
+     * @param token token UUID a marcar como usado
+     * @throws ResourceNotFoundException si el token no existe
+     */
     @Transactional
     public void markTokenAsUsed(String token) {
         AdoptionFormToken formToken = tokenRepository.findByToken(token)

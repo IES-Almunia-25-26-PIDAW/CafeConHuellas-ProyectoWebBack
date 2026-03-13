@@ -1,6 +1,7 @@
 package com.example.cafe_con_huellas.service;
 import com.example.cafe_con_huellas.dto.EventDTO;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
+import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.mapper.EventMapper;
 import com.example.cafe_con_huellas.model.entity.Event;
 import com.example.cafe_con_huellas.model.entity.EventStatus;
@@ -13,7 +14,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// Servicio encargado de la lógica de negocio para la gestión de eventos
+/**
+ * Servicio encargado de la lógica de negocio para la gestión de eventos del refugio.
+ * <p>
+ * Permite crear, consultar, actualizar y eliminar eventos,
+ * así como filtrarlos por fecha futura o estado.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class EventService {
@@ -23,7 +30,11 @@ public class EventService {
 
     // ---------- CRUD BÁSICO ----------
 
-    // Obtiene todos los eventos convertidos a DTO
+    /**
+     * Obtiene todos los eventos convertidos a DTO.
+     *
+     * @return lista de {@link EventDTO} con todos los eventos registrados
+     */
     @Transactional(readOnly = true)
     public List<EventDTO> findAll() {
         return eventRepository.findAll().stream()
@@ -31,7 +42,13 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    // Busca un evento por ID y lo devuelve como DTO
+    /**
+     * Busca un evento por su identificador.
+     *
+     * @param id identificador único del evento
+     * @return {@link EventDTO} con los datos del evento
+     * @throws ResourceNotFoundException si no existe el evento con ese ID
+     */
     @Transactional(readOnly = true)
     public EventDTO findById(Long id) {
         return eventRepository.findById(id)
@@ -39,7 +56,16 @@ public class EventService {
                 .orElseThrow(() -> new ResourceNotFoundException("Evento no encontrado con ID: " + id));
     }
 
-    // Registra o actualiza un evento recibiendo un DTO
+    /**
+     * Registra un nuevo evento o actualiza uno existente.
+     * <p>
+     * Si el DTO incluye un ID, verifica que el evento exista antes de actualizar.
+     * </p>
+     *
+     * @param eventDTO datos del evento a persistir
+     * @return {@link EventDTO} con el evento guardado
+     * @throws ResourceNotFoundException si se intenta actualizar un evento inexistente
+     */
     @Transactional
     public EventDTO save(EventDTO eventDTO) {
         if (eventDTO.getId() != null) {
@@ -57,7 +83,12 @@ public class EventService {
         return eventMapper.toDto(savedEvent);
     }
 
-    // Elimina un evento por su identificador
+    /**
+     * Elimina un evento del sistema por su identificador.
+     *
+     * @param id identificador del evento a eliminar
+     * @throws ResourceNotFoundException si no existe el evento con ese ID
+     */
     @Transactional
     public void deleteById(Long id) {
         if (!eventRepository.existsById(id)) {
@@ -68,7 +99,11 @@ public class EventService {
 
     // ---------- MÉTODOS ESPECÍFICOS ----------
 
-    // Obtiene solo los eventos que están por venir (fecha posterior a la actual)
+    /**
+     * Obtiene los eventos cuya fecha es posterior a la actual, ordenados cronológicamente.
+     *
+     * @return lista de {@link EventDTO} con los próximos eventos
+     */
     @Transactional(readOnly = true)
     public List<EventDTO> findUpcomingEvents() {
         return eventRepository.findByEventDateAfterOrderByEventDateAsc(LocalDateTime.now())
@@ -77,7 +112,16 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    // Filtra eventos por su estado (PROGRAMADO, EN_CURSO, etc.)
+    /**
+     * Filtra los eventos por su estado.
+     * <p>
+     * Convierte el {@code String} recibido al enum {@link EventStatus}.
+     * </p>
+     *
+     * @param statusName nombre del estado en texto (insensible a mayúsculas)
+     * @return lista de {@link EventDTO} que coinciden con el estado indicado
+     * @throws BadRequestException si el estado no es válido
+     */
     @Transactional(readOnly = true)
     public List<EventDTO> findByStatus(String statusName) {
         try {

@@ -15,7 +15,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// Servicio encargado de la gestión de las mascotas favoritas de los usuarios
+/**
+ * Servicio encargado de la gestión de las mascotas favoritas de los usuarios.
+ * <p>
+ * Permite marcar y desmarcar mascotas como favoritas, validando
+ * que no existan duplicados y que las entidades referenciadas sean válidas.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class UserPetFavoriteService {
@@ -27,7 +33,11 @@ public class UserPetFavoriteService {
 
     // ---------- CRUD BÁSICO ----------
 
-    // Obtiene todos los registros de favoritos del sistema convertidos a DTO
+    /**
+     * Obtiene todos los registros de favoritos del sistema.
+     *
+     * @return lista de {@link UserPetFavoriteDTO} con todos los registros
+     */
     @Transactional(readOnly = true)
     public List<UserPetFavoriteDTO> findAll() {
         return favoriteRepository.findAll().stream()
@@ -35,7 +45,13 @@ public class UserPetFavoriteService {
                 .collect(Collectors.toList());
     }
 
-    // Busca un registro de favorito específico por su ID y lo devuelve como DTO
+    /**
+     * Busca un registro de favorito por su identificador.
+     *
+     * @param id identificador único del registro
+     * @return {@link UserPetFavoriteDTO} con los datos del registro
+     * @throws ResourceNotFoundException si no existe el registro con ese ID
+     */
     @Transactional(readOnly = true)
     public UserPetFavoriteDTO findById(Long id) {
         return favoriteRepository.findById(id)
@@ -43,7 +59,18 @@ public class UserPetFavoriteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota Favorita no encontrada con ID: " + id));
     }
 
-    // Registra una nueva mascota en la lista de favoritos de un usuario
+    /**
+     * Añade una mascota a la lista de favoritos de un usuario.
+     * <p>
+     * Valida que no exista ya el favorito para esa combinación usuario-mascota
+     * y que ambas entidades existan en el sistema.
+     * </p>
+     *
+     * @param dto datos con el identificador del usuario y de la mascota
+     * @return {@link UserPetFavoriteDTO} con el registro creado
+     * @throws BadRequestException si la mascota ya está en favoritos del usuario
+     * @throws ResourceNotFoundException si el usuario o la mascota no existen
+     */
     @Transactional
     public UserPetFavoriteDTO save(UserPetFavoriteDTO dto) {
         // Validación de negocio: Evitamos que una mascota se guarde dos veces para el mismo usuario
@@ -65,7 +92,12 @@ public class UserPetFavoriteService {
         return favoriteMapper.toDto(favoriteRepository.save(favorite));
     }
 
-    // Elimina un registro de favorito mediante su identificador único
+    /**
+     * Elimina un registro de favorito por su identificador único.
+     *
+     * @param id identificador del registro a eliminar
+     * @throws ResourceNotFoundException si no existe el registro con ese ID
+     */
     @Transactional
     public void deleteById(Long id) {
         if (!favoriteRepository.existsById(id)) {
@@ -76,7 +108,12 @@ public class UserPetFavoriteService {
 
     // ---------- MÉTODOS ESPECÍFICOS ----------
 
-    // Recupera todas las mascotas marcadas como favoritas por un usuario concreto
+    /**
+     * Obtiene todas las mascotas marcadas como favoritas por un usuario concreto.
+     *
+     * @param userId identificador del usuario
+     * @return lista de {@link UserPetFavoriteDTO} del usuario indicado
+     */
     @Transactional(readOnly = true)
     public List<UserPetFavoriteDTO> findByUserId(Long userId) {
         return favoriteRepository.findByUserId(userId).stream()
@@ -84,13 +121,25 @@ public class UserPetFavoriteService {
                 .collect(Collectors.toList());
     }
 
-    // Verifica si existe una relación de favorito activa entre un usuario y una mascota
+    /**
+     * Comprueba si existe una relación de favorito entre un usuario y una mascota.
+     *
+     * @param userId identificador del usuario
+     * @param petId  identificador de la mascota
+     * @return {@code true} si la mascota es favorita del usuario, {@code false} en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean isFavorite(Long userId, Long petId) {
         return favoriteRepository.existsByUserIdAndPetId(userId, petId);
     }
 
-    // Elimina la marca de favorito de una mascota para un usuario específico (Unfavorite)
+    /**
+     * Elimina la marca de favorito de una mascota para un usuario específico.
+     *
+     * @param userId identificador del usuario
+     * @param petId  identificador de la mascota a desmarcar
+     * @throws ResourceNotFoundException si no existe el favorito para esa combinación
+     */
     @Transactional
     public void removeFavorite(Long userId, Long petId) {
         // Verificamos existencia antes de intentar borrar por parámetros

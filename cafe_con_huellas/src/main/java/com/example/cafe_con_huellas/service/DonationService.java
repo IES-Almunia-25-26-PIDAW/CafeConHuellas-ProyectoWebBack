@@ -18,7 +18,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// Servicio encargado de la lógica de negocio relacionada con las donaciones
+/**
+ * Servicio encargado de la lógica de negocio relacionada con las donaciones.
+ * <p>
+ * Soporta tanto donaciones anónimas (sin usuario asociado) como donaciones
+ * de usuarios registrados, y ofrece estadísticas de totales.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class DonationService {
@@ -29,21 +35,41 @@ public class DonationService {
 
     // ---------- CRUD BÁSICO ----------
 
-    // Devuelve todas las donaciones registradas
+    /**
+     * Obtiene todas las donaciones registradas convertidas a DTO.
+     *
+     * @return lista de {@link DonationDTO} con todos los registros
+     */
     public List<DonationDTO> findAll() {
         return donationRepository.findAll().stream()
                 .map(donationMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    // Busca una donación por su ID
+    /**
+     * Busca una donación concreta por su identificador.
+     *
+     * @param id identificador único de la donación
+     * @return {@link DonationDTO} con los datos de la donación
+     * @throws ResourceNotFoundException si no existe la donación con ese ID
+     */
     public DonationDTO findById(Long id) {
         return donationRepository.findById(id)
                 .map(donationMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Donación no encontrada con ID: " + id));
     }
 
-    // Registra una nueva donación
+    /**
+     * Registra una nueva donación en el sistema.
+     * <p>
+     * Si el {@code userId} es {@code null} se trata como donación anónima.
+     * La fecha se asigna automáticamente en el momento de la persistencia.
+     * </p>
+     *
+     * @param donationDto datos de la donación a registrar
+     * @return {@link DonationDTO} con el registro persistido
+     * @throws ResourceNotFoundException si el usuario referenciado no existe
+     */
     @Transactional
     public DonationDTO save(DonationDTO donationDto) {
         // 1. Convertimos DTO a Entidad (vía Mapper)
@@ -65,7 +91,12 @@ public class DonationService {
         return donationMapper.toDto(savedDonation);
     }
 
-    // Elimina una donación por su ID
+    /**
+     * Elimina una donación del sistema por su identificador.
+     *
+     * @param id identificador de la donación a eliminar
+     * @throws ResourceNotFoundException si no existe la donación con ese ID
+     */
     public void deleteById(Long id) {
         if (!donationRepository.existsById(id)) {
             throw new ResourceNotFoundException("No se puede eliminar: Donación no encontrada");
@@ -75,14 +106,28 @@ public class DonationService {
 
     // ---------- MÉTODOS ESPECÍFICOS ----------
 
-    // Obtiene todas las donaciones realizadas por un usuario concreto
+    /**
+     * Obtiene todas las donaciones realizadas por un usuario concreto.
+     *
+     * @param userId identificador del usuario
+     * @return lista de {@link DonationDTO} del usuario indicado
+     */
     public List<DonationDTO> findByUserId(Long userId) {
         return donationRepository.findByUserId(userId).stream()
                 .map(donationMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    // Obtiene donaciones filtradas por categoria
+    /**
+     * Filtra las donaciones por categoría.
+     * <p>
+     * Convierte el {@code String} recibido del frontend al enum {@link DonationCategory}.
+     * </p>
+     *
+     * @param category nombre de la categoría en texto (insensible a mayúsculas)
+     * @return lista de {@link DonationDTO} de la categoría indicada
+     * @throws BadRequestException si la categoría no es válida
+     */
     public List<DonationDTO> findByCategory(String category) {
         // Convertimos el String que viene del Front a Enum para el Repository
         try {
@@ -96,20 +141,35 @@ public class DonationService {
     }
 
 
-    // Calcula el total donado por un usuario
+    /**
+     * Calcula el importe total donado por un usuario específico.
+     *
+     * @param userId identificador del usuario
+     * @return importe total acumulado, o {@code BigDecimal.ZERO} si no hay donaciones
+     */
     public BigDecimal getTotalAmountByUser(Long userId) {
         BigDecimal total = donationRepository.sumAmountByUserId(userId);
         return total != null ? total : BigDecimal.ZERO;
     }
 
-    // Calcula el total acumulado de todas las donaciones
+    /**
+     * Calcula el importe total acumulado de todas las donaciones del sistema.
+     *
+     * @return importe total global, o {@code BigDecimal.ZERO} si no hay donaciones
+     */
     public BigDecimal getTotalDonationsAmount() {
         BigDecimal total = donationRepository.sumTotalAmount();
         return total != null ? total : BigDecimal.ZERO;
     }
 
 
-    // Actualizar donación
+    /**
+     * Actualiza los datos de una donación existente.
+     *
+     * @param donationDto datos actualizados de la donación, debe incluir un ID válido
+     * @return {@link DonationDTO} con el registro actualizado
+     * @throws ResourceNotFoundException si no existe la donación con ese ID
+     */
     @Transactional
     public DonationDTO updateDonation(DonationDTO donationDto) {
         if (donationDto.getId() != null) {

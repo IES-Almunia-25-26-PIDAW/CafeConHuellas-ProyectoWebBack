@@ -4,6 +4,7 @@ import com.example.cafe_con_huellas.dto.RegisterDTO;
 import com.example.cafe_con_huellas.dto.UserDetailDTO;
 import com.example.cafe_con_huellas.dto.UserSummaryDTO;
 import com.example.cafe_con_huellas.mapper.UserMapper;
+import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.model.entity.User;
 import com.example.cafe_con_huellas.service.UserService;
 import jakarta.validation.Valid;
@@ -14,8 +15,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/* API para la gestión de usuarios del sistema.
+/**
+ * Controlador REST para la gestión de usuarios del sistema.
+ * <p>
  * Diferencia entre perfiles detallados y resúmenes para listados.
+ * Todos los endpoints requieren rol ADMIN. El registro público
+ * de usuarios se gestiona a través de {@code /api/auth/register}.
+ * </p>
  */
 @RestController
 @RequestMapping("/api/users")
@@ -25,8 +31,12 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
 
-    // Obtiene una lista simplificada de todos los usuarios (vista admin)
-    // Solo ADMIN puede ver el listado completo de usuarios
+    /**
+     * Obtiene una lista simplificada de todos los usuarios del sistema.
+     * Requiere rol ADMIN.
+     *
+     * @return lista de {@link UserSummaryDTO} con el resumen de cada usuario
+     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserSummaryDTO> getAllUsers() {
@@ -35,17 +45,32 @@ public class UserController {
                 .toList();
     }
 
-    // Obtiene el perfil completo de un usuario por su ID
-    // Solo ADMIN puede ver el detalle de un usuario concreto
+    /**
+     * Obtiene el perfil completo de un usuario por su identificador.
+     * Requiere rol ADMIN.
+     *
+     * @param id identificador único del usuario
+     * @return {@link UserDetailDTO} con todos los datos del usuario
+     * @throws ResourceNotFoundException si no existe usuario con ese ID
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public UserDetailDTO getUserById(@PathVariable Long id) {
         return userService.findById(id);
     }
 
-    // Endpoint de registro: recibe RegisterDTO con contraseña, devuelve UserDetailDTO sin ella
-    // Solo ADMIN puede crear usuarios desde este endpoint
-    // El registro público va por /api/auth/register
+    /**
+     * Crea un nuevo usuario desde el panel de administración.
+     * <p>
+     * Recibe un {@link RegisterDTO} con la contraseña y devuelve
+     * un {@link UserDetailDTO} sin ella. Para el registro público
+     * usar {@code /api/auth/register}.
+     * Requiere rol ADMIN.
+     * </p>
+     *
+     * @param registerDTO datos del nuevo usuario a registrar
+     * @return {@link UserDetailDTO} con la información del usuario creado
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
@@ -53,21 +78,29 @@ public class UserController {
         return userService.register(registerDTO);
     }
 
-    /* Actualiza la información personal del usuario.
-     * Se utiliza un método controlado en el service para no sobrescribir la contraseña.
+    /**
+     * Actualiza la información personal de un usuario existente.
+     * <p>
+     * Utiliza un método controlado en el servicio para no sobrescribir la contraseña.
+     * Requiere rol ADMIN.
+     * </p>
+     *
+     * @param id            identificador del usuario a actualizar
+     * @param userDetailDTO nuevos datos del perfil del usuario
+     * @return {@link UserDetailDTO} con los datos actualizados
      */
-    // Solo ADMIN puede actualizar usuarios
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public UserDetailDTO updateProfile(@PathVariable Long id, @Valid @RequestBody UserDetailDTO userDetailDTO) {
         return userService.updateProfile(id, userDetailDTO);
     }
 
-    // Elimina un usuario del sistema permanentemente.
-    /* * @ResponseStatus(HttpStatus.NO_CONTENT) devuelve un código 204,
-     * indicando que la acción se realizó con éxito pero no hay contenido que devolver.
+    /**
+     * Elimina un usuario del sistema de forma permanente.
+     * Requiere rol ADMIN.
+     *
+     * @param id identificador del usuario a eliminar
      */
-    // Solo ADMIN puede eliminar usuarios
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")

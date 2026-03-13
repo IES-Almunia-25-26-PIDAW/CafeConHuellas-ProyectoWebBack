@@ -17,7 +17,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// Servicio encargado de la gestión de relaciones entre usuarios y mascotas
+/**
+ * Servicio encargado de la lógica de negocio de los vínculos entre usuarios y mascotas.
+ * <p>
+ * Aplica reglas estrictas de exclusividad: una mascota adoptada no puede tener
+ * nuevos vínculos, y solo puede haber un proceso de adopción o acogida activo a la vez.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class UserPetRelationshipService {
@@ -29,7 +35,11 @@ public class UserPetRelationshipService {
 
     // ---------- CRUD BÁSICO ----------
 
-    // Obtiene el listado de todas las relaciones en formato DTO
+    /**
+     * Obtiene todos los vínculos registrados en el sistema convertidos a DTO.
+     *
+     * @return lista de {@link UserPetRelationshipDTO} con todos los registros
+     */
     @Transactional(readOnly = true)
     public List<UserPetRelationshipDTO> findAll() {
         return relationshipRepository.findAll().stream()
@@ -37,7 +47,13 @@ public class UserPetRelationshipService {
                 .collect(Collectors.toList());
     }
 
-    // Busca un vínculo específico por su ID y lo devuelve como DTO
+    /**
+     * Busca un vínculo por su identificador.
+     *
+     * @param id identificador único del vínculo
+     * @return {@link UserPetRelationshipDTO} con los datos del registro
+     * @throws ResourceNotFoundException si no existe el vínculo con ese ID
+     */
     @Transactional(readOnly = true)
     public UserPetRelationshipDTO findById(Long id) {
         return relationshipRepository.findById(id)
@@ -45,7 +61,19 @@ public class UserPetRelationshipService {
                 .orElseThrow(() -> new ResourceNotFoundException("Relación no encontrada con ID: " + id));
     }
 
-    // Registra un nuevo vínculo aplicando reglas estrictas de exclusividad para adopciones y acogidas
+    /**
+     * Registra un nuevo vínculo entre un usuario y una mascota.
+     * <p>
+     * Aplica las siguientes reglas de negocio antes de persistir:
+     * una mascota adoptada no admite nuevos vínculos, y no puede haber
+     * más de un proceso de adopción o acogida activo simultáneamente.
+     * </p>
+     *
+     * @param dto datos del vínculo a registrar
+     * @return {@link UserPetRelationshipDTO} con el registro creado
+     * @throws ResourceNotFoundException si el usuario o la mascota no existen
+     * @throws BadRequestException si se viola alguna regla de exclusividad
+     */
     @Transactional
     public UserPetRelationshipDTO save(UserPetRelationshipDTO dto) {
         // 1. Validaciones de existencia de Entidades
@@ -88,7 +116,12 @@ public class UserPetRelationshipService {
         return relationshipMapper.toDto(relationshipRepository.save(relationship));
     }
 
-    // Elimina un registro de relación (Acción restringida a administradores)
+    /**
+     * Elimina un vínculo del sistema por su identificador.
+     *
+     * @param id identificador del vínculo a eliminar
+     * @throws ResourceNotFoundException si no existe el vínculo con ese ID
+     */
     @Transactional
     public void deleteById(Long id) {
         if (!relationshipRepository.existsById(id)) {
@@ -99,7 +132,12 @@ public class UserPetRelationshipService {
 
     // ---------- MÉTODOS ESPECÍFICOS ----------
 
-    // Devuelve el historial de vínculos de un usuario concreto
+    /**
+     * Obtiene el historial de vínculos de un usuario específico.
+     *
+     * @param userId identificador del usuario
+     * @return lista de {@link UserPetRelationshipDTO} del usuario indicado
+     */
     @Transactional(readOnly = true)
     public List<UserPetRelationshipDTO> findByUserId(Long userId) {
         return relationshipRepository.findByUserId(userId).stream()
@@ -107,7 +145,16 @@ public class UserPetRelationshipService {
                 .collect(Collectors.toList());
     }
 
-    // Devuelve el historial de quién ha cuidado o adoptado a una mascota específica
+    /**
+     * Obtiene la trazabilidad completa de vínculos que ha tenido una mascota específica.
+     * <p>
+     * Devuelve tanto los procesos activos como los históricos,
+     * permitiendo conocer quién ha cuidado o adoptado al animal.
+     * </p>
+     *
+     * @param petId identificador de la mascota
+     * @return lista de {@link UserPetRelationshipDTO} asociados a la mascota
+     */
     @Transactional(readOnly = true)
     public List<UserPetRelationshipDTO> findByPetId(Long petId) {
         return relationshipRepository.findByPetId(petId).stream()
@@ -115,7 +162,11 @@ public class UserPetRelationshipService {
                 .collect(Collectors.toList());
     }
 
-    // Devuelve todos los procesos que se encuentran "en curso" actualmente
+    /**
+     * Obtiene todos los vínculos activos actualmente en el refugio.
+     *
+     * @return lista de {@link UserPetRelationshipDTO} con los procesos en curso
+     */
     @Transactional(readOnly = true)
     public List<UserPetRelationshipDTO> findActiveRelationships() {
         return relationshipRepository.findByActiveTrue().stream()
@@ -123,7 +174,16 @@ public class UserPetRelationshipService {
                 .collect(Collectors.toList());
     }
 
-    // Cierra un vínculo activo (por ejemplo, al finalizar un periodo de acogida o paseo)
+    /**
+     * Cierra un vínculo activo asignando la fecha de fin.
+     * <p>
+     * Si no se proporciona fecha de cierre, se usa la fecha actual.
+     * </p>
+     *
+     * @param relationshipId identificador del vínculo a cerrar
+     * @param endDate        fecha de cierre, o {@code null} para usar la fecha actual
+     * @throws ResourceNotFoundException si no existe el vínculo con ese ID
+     */
     @Transactional
     public void endRelationship(Long relationshipId, LocalDate endDate) {
         UserPetRelationship relationship = relationshipRepository.findById(relationshipId)

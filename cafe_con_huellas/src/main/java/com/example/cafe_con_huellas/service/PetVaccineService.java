@@ -16,7 +16,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// Servicio encargado de la lógica de negocio del historial de vacunación
+/**
+ * Servicio encargado de la lógica de negocio del historial de vacunación de las mascotas.
+ * <p>
+ * Gestiona el registro y seguimiento de las vacunas administradas,
+ * con validaciones de fechas y control de próximas dosis pendientes.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class PetVaccineService {
@@ -28,7 +34,11 @@ public class PetVaccineService {
 
     // ---------- CRUD BÁSICO ----------
 
-    // Obtiene todo el historial de vacunación global convertido a DTO
+    /**
+     * Obtiene todo el historial de vacunación global convertido a DTO.
+     *
+     * @return lista de {@link PetVaccineDTO} con todos los registros
+     */
     @Transactional(readOnly = true)
     public List<PetVaccineDTO> findAll() {
         return petVaccineRepository.findAll().stream()
@@ -36,7 +46,13 @@ public class PetVaccineService {
                 .collect(Collectors.toList());
     }
 
-    // Busca un registro de vacunación específico por su ID y lo devuelve como DTO
+    /**
+     * Busca un registro de vacunación por su identificador.
+     *
+     * @param id identificador único del registro
+     * @return {@link PetVaccineDTO} con los datos del registro
+     * @throws ResourceNotFoundException si no existe el registro con ese ID
+     */
     @Transactional(readOnly = true)
     public PetVaccineDTO findById(Long id) {
         return petVaccineRepository.findById(id)
@@ -44,7 +60,18 @@ public class PetVaccineService {
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de vacunación no encontrado con ID: " + id));
     }
 
-    // Registra la aplicación de una vacuna validando existencia de mascota y tipo de vacuna
+    /**
+     * Registra la administración de una vacuna a una mascota.
+     * <p>
+     * Valida que la fecha de administración no sea futura y que
+     * tanto la mascota como el tipo de vacuna existan en el sistema.
+     * </p>
+     *
+     * @param dto datos del registro de vacunación
+     * @return {@link PetVaccineDTO} con el registro persistido
+     * @throws BadRequestException si la fecha de administración es futura
+     * @throws ResourceNotFoundException si la mascota o la vacuna no existen
+     */
     @Transactional
     public PetVaccineDTO save(PetVaccineDTO dto) {
         // Validación de negocio: La vacuna ya debe haberse puesto, no puede ser en el futuro
@@ -66,7 +93,12 @@ public class PetVaccineService {
         return petVaccineMapper.toDto(petVaccineRepository.save(petVaccine));
     }
 
-    // Elimina un registro de vacunación del historial médico
+    /**
+     * Elimina un registro de vacunación del historial médico.
+     *
+     * @param id identificador del registro a eliminar
+     * @throws ResourceNotFoundException si no existe el registro con ese ID
+     */
     @Transactional
     public void deleteById(Long id) {
         if (!petVaccineRepository.existsById(id)) {
@@ -77,7 +109,12 @@ public class PetVaccineService {
 
     // ---------- FILTROS Y BÚSQUEDAS ----------
 
-    // Obtiene el historial completo de vacunas de una mascota específica
+    /**
+     * Obtiene el historial completo de vacunas de una mascota específica.
+     *
+     * @param petId identificador de la mascota
+     * @return lista de {@link PetVaccineDTO} asociadas a la mascota
+     */
     @Transactional(readOnly = true)
     public List<PetVaccineDTO> findByPetId(Long petId) {
         return petVaccineRepository.findByPetId(petId).stream()
@@ -85,7 +122,12 @@ public class PetVaccineService {
                 .collect(Collectors.toList());
     }
 
-    // Busca vacunas programadas para refuerzo a partir de una fecha concreta
+    /**
+     * Busca vacunas con próxima dosis programada a partir de una fecha concreta.
+     *
+     * @param fromDate fecha a partir de la cual buscar próximas dosis
+     * @return lista de {@link PetVaccineDTO} con refuerzos pendientes
+     */
     @Transactional(readOnly = true)
     public List<PetVaccineDTO> findUpcomingVaccines(LocalDate fromDate) {
         return petVaccineRepository.findByNextDoseDateAfter(fromDate).stream()
@@ -93,7 +135,11 @@ public class PetVaccineService {
                 .collect(Collectors.toList());
     }
 
-    // Identifica vacunas cuyo refuerzo ha expirado (pendientes de aplicar)
+    /**
+     * Identifica vacunas cuya fecha de refuerzo ya ha pasado y están pendientes de aplicar.
+     *
+     * @return lista de {@link PetVaccineDTO} con vacunas vencidas
+     */
     @Transactional(readOnly = true)
     public List<PetVaccineDTO> findOverdueVaccines() {
         return petVaccineRepository.findByNextDoseDateBefore(LocalDate.now()).stream()
@@ -103,7 +149,18 @@ public class PetVaccineService {
 
     // ---------- ACTUALIZACIÓN CONTROLADA ----------
 
-    // Actualiza información médica como la fecha de la próxima dosis o notas de observación
+    /**
+     * Actualiza la información médica de un registro de vacunación existente.
+     * <p>
+     * Solo permite modificar la fecha de la próxima dosis y las notas clínicas,
+     * para no alterar la trazabilidad del tratamiento original.
+     * </p>
+     *
+     * @param id  identificador del registro a actualizar
+     * @param dto nuevos datos médicos
+     * @return {@link PetVaccineDTO} con los datos actualizados
+     * @throws ResourceNotFoundException si no existe el registro con ese ID
+     */
     @Transactional
     public PetVaccineDTO updateMedicalInfo(Long id, PetVaccineDTO dto) {
         // Verificamos que el registro exista

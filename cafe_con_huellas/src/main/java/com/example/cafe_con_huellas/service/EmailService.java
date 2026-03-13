@@ -6,7 +6,14 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-// Servicio encargado de enviar correos electrónicos automáticos
+/**
+ * Servicio encargado del envío de correos electrónicos automáticos del sistema.
+ * <p>
+ * Centraliza todas las comunicaciones por email: notificaciones al administrador,
+ * confirmaciones a usuarios y envío de formularios de adopción con token único.
+ * La configuración del remitente y el email del admin se leen desde {@code application.properties}.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class EmailService {
@@ -21,7 +28,13 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    // Método genérico para enviar cualquier correo simple
+    /**
+     * Método genérico para enviar un correo electrónico simple.
+     *
+     * @param to      dirección de correo del destinatario
+     * @param subject asunto del mensaje
+     * @param body    cuerpo del mensaje en texto plano
+     */
     public void sendEmail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
         // Remitente
@@ -36,7 +49,14 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    // Notifica al admin cuando un usuario solicita adoptar una mascota
+    /**
+     * Notifica al administrador cuando un usuario envía una solicitud de adopción.
+     *
+     * @param userName  nombre completo del usuario solicitante
+     * @param userEmail email de contacto del usuario
+     * @param petName   nombre de la mascota solicitada
+     */
+
     public void notifyAdminAdoptionRequest(String userName, String userEmail, String petName) {
         String subject = "Nueva solicitud de adopción - " + petName;
         String body = """
@@ -56,7 +76,13 @@ public class EmailService {
         sendEmail(adminEmail, subject, body);
     }
 
-    // Envía confirmación al usuario cuando su solicitud ha sido registrada
+    /**
+     * Envía un email de confirmación al usuario cuando su solicitud de adopción ha sido registrada.
+     *
+     * @param userEmail email del usuario
+     * @param userName  nombre del usuario para personalizar el mensaje
+     * @param petName   nombre de la mascota sobre la que se ha solicitado la adopción
+     */
     public void confirmAdoptionRequestToUser(String userEmail, String userName, String petName) {
         String subject = "Solicitud de adopción recibida - " + petName;
         String body = """
@@ -78,7 +104,17 @@ public class EmailService {
         sendEmail(userEmail, subject, body);
     }
 
-    // Envía un formulario público con token único al usuario interesado
+    /**
+     * Envía al usuario el enlace único con el token para acceder al formulario de adopción.
+     * <p>
+     * El enlace expira en 48 horas y es de uso único.
+     * </p>
+     *
+     * @param userEmail email del usuario destinatario
+     * @param userName  nombre del usuario para personalizar el mensaje
+     * @param petName   nombre de la mascota del proceso de adopción
+     * @param token     token UUID único que se incluye en el enlace del formulario
+     */
     public void sendAdoptionFormLink(String userEmail, String userName, String petName, String token) {
         String subject = "Formulario de adopción - " + petName;
         String body = """
@@ -98,7 +134,16 @@ public class EmailService {
         sendEmail(userEmail, subject, body);
     }
 
-    // Construye la URL del formulario público con el token único
+    /**
+     * Construye la URL completa del formulario público de adopción con el token único.
+     * <p>
+     * En producción la URL base se obtiene de {@code app.frontend.url} en
+     * {@code application.properties}.
+     * </p>
+     *
+     * @param token token UUID único que se incluye en la URL
+     * @return URL completa del formulario para incluir en el email
+     */
     private String buildFormLink(String token) {
         // En producción esto vendría de application.properties con la URL real del frontend
         return "http://localhost:4200/adopcion/formulario/" + token;

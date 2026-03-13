@@ -2,6 +2,7 @@ package com.example.cafe_con_huellas.service;
 
 import com.example.cafe_con_huellas.dto.PetDetailDTO;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
+import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.mapper.PetMapper;
 import com.example.cafe_con_huellas.model.entity.Pet;
 import com.example.cafe_con_huellas.model.entity.PetCategory;
@@ -12,7 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+/**
+ * Servicio encargado de la lógica de negocio del catálogo de mascotas.
+ * <p>
+ * Gestiona el ciclo de vida completo de las mascotas del refugio,
+ * incluyendo filtros por categoría, esterilización y búsqueda por texto.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class PetService {
@@ -22,7 +29,11 @@ public class PetService {
 
     // ---------- CRUD BÁSICO ----------
 
-    // Obtiene todas las mascotas con su detalle completo (incluyendo galería)
+    /**
+     * Obtiene todas las mascotas registradas convertidas a DTO detallado.
+     *
+     * @return lista de {@link PetDetailDTO} con todos los registros
+     */
     @Transactional(readOnly = true)
     public List<PetDetailDTO> findAll() {
         return petRepository.findAll().stream()
@@ -30,7 +41,13 @@ public class PetService {
                 .collect(Collectors.toList());
     }
 
-    // Busca una mascota por su ID y devuelve su información detallada
+    /**
+     * Busca una mascota por su identificador.
+     *
+     * @param id identificador único de la mascota
+     * @return {@link PetDetailDTO} con la ficha completa de la mascota
+     * @throws ResourceNotFoundException si no existe la mascota con ese ID
+     */
     @Transactional(readOnly = true)
     public PetDetailDTO findById(Long id) {
         return petRepository.findById(id)
@@ -38,7 +55,12 @@ public class PetService {
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + id));
     }
 
-    // Registra una nueva mascota o guarda cambios profundos desde el DTO de detalle
+    /**
+     * Registra una nueva mascota en el sistema.
+     *
+     * @param dto datos de la mascota a registrar
+     * @return {@link PetDetailDTO} con la mascota persistida
+     */
     @Transactional
     public PetDetailDTO save(PetDetailDTO dto) {
         // Convertimos el DTO de detalle a la entidad Pet
@@ -50,7 +72,12 @@ public class PetService {
         return petMapper.toDetailDto(savedPet);
     }
 
-    // Elimina una mascota y toda su información relacionada del sistema
+    /**
+     * Elimina el registro de una mascota por su identificador.
+     *
+     * @param id identificador de la mascota a eliminar
+     * @throws ResourceNotFoundException si no existe la mascota con ese ID
+     */
     @Transactional
     public void deleteById(Long id) {
         if (!petRepository.existsById(id)) {
@@ -61,7 +88,12 @@ public class PetService {
 
     // ---------- FILTROS Y BÚSQUEDAS ----------
 
-    // Filtra mascotas por su estado de esterilización devolviendo el detalle completo
+    /**
+     * Filtra las mascotas por su estado de esterilización.
+     *
+     * @param neutered {@code true} para mascotas esterilizadas, {@code false} para no esterilizadas
+     * @return lista de {@link PetDetailDTO} filtrada por estado de esterilización
+     */
     @Transactional(readOnly = true)
     public List<PetDetailDTO> findByNeutered(Boolean neutered) {
         return petRepository.findByNeutered(neutered).stream()
@@ -69,7 +101,16 @@ public class PetService {
                 .collect(Collectors.toList());
     }
 
-    // Filtra mascotas por categoría (PERRO, GATO)
+    /**
+     * Filtra las mascotas por categoría.
+     * <p>
+     * Convierte el {@code String} recibido al enum {@link PetCategory}.
+     * </p>
+     *
+     * @param categoryName nombre de la categoría en texto (insensible a mayúsculas)
+     * @return lista de {@link PetDetailDTO} de la categoría indicada
+     * @throws BadRequestException si la categoría no es válida
+     */
     @Transactional(readOnly = true)
     public List<PetDetailDTO> findByCategory(String categoryName) {
         try {
@@ -82,7 +123,12 @@ public class PetService {
         }
     }
 
-    // Busca mascotas por nombre o raza con coincidencia parcial
+    /**
+     * Busca mascotas por nombre o raza con coincidencia parcial e insensible a mayúsculas.
+     *
+     * @param text texto a buscar en el nombre o la raza
+     * @return lista de {@link PetDetailDTO} que coinciden con la búsqueda
+     */
     @Transactional(readOnly = true)
     public List<PetDetailDTO> search(String text) {
         return petRepository.findByNameContainingIgnoreCaseOrBreedContainingIgnoreCase(text, text)
@@ -93,7 +139,18 @@ public class PetService {
 
     // ---------- ACTUALIZACIÓN CONTROLADA ----------
 
-    // Actualiza la información técnica y descriptiva de una mascota existente
+    /**
+     * Actualiza la información técnica y descriptiva de una mascota existente.
+     * <p>
+     * Solo modifica los campos editables: nombre, descripción, raza, edad, peso,
+     * esterilización, PPP, categoría e imagen principal.
+     * </p>
+     *
+     * @param id  identificador de la mascota a actualizar
+     * @param dto nuevos datos de la mascota
+     * @return {@link PetDetailDTO} con los datos actualizados
+     * @throws ResourceNotFoundException si no existe la mascota con ese ID
+     */
     @Transactional
     public PetDetailDTO updateBasicInfo(Long id, PetDetailDTO dto) {
         // Recuperamos la mascota original

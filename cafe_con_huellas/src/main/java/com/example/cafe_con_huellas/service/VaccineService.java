@@ -13,7 +13,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// Servicio encargado de la lógica de negocio del catálogo de vacunas
+/**
+ * Servicio encargado de la lógica de negocio del catálogo de vacunas.
+ * <p>
+ * Permite definir los tipos de vacunas disponibles en el sistema,
+ * validando que no existan duplicados por nombre.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class VaccineService {
@@ -23,7 +29,11 @@ public class VaccineService {
 
     // ---------------- CRUD BÁSICO ----------------
 
-    // Obtiene todas las vacunas del catálogo convertidas a DTO
+    /**
+     * Obtiene todas las vacunas del catálogo convertidas a DTO.
+     *
+     * @return lista de {@link VaccineDTO} con todos los registros
+     */
     @Transactional(readOnly = true)
     public List<VaccineDTO> findAll() {
         return vaccineRepository.findAll().stream()
@@ -31,7 +41,13 @@ public class VaccineService {
                 .collect(Collectors.toList());
     }
 
-    // Busca una vacuna específica por su ID
+    /**
+     * Busca una vacuna por su identificador.
+     *
+     * @param id identificador único de la vacuna
+     * @return {@link VaccineDTO} con los datos de la vacuna
+     * @throws ResourceNotFoundException si no existe la vacuna con ese ID
+     */
     @Transactional(readOnly = true)
     public VaccineDTO findById(Long id) {
         return vaccineRepository.findById(id)
@@ -39,7 +55,16 @@ public class VaccineService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vacuna no encontrada con ID: " + id));
     }
 
-    // Registra una nueva vacuna en el catálogo validando que no esté duplicada
+    /**
+     * Registra una nueva vacuna en el catálogo.
+     * <p>
+     * Valida que no exista otra vacuna con el mismo nombre antes de persistir.
+     * </p>
+     *
+     * @param dto datos de la vacuna a registrar
+     * @return {@link VaccineDTO} con la vacuna persistida
+     * @throws BadRequestException si ya existe una vacuna con ese nombre
+     */
     @Transactional
     public VaccineDTO save(VaccineDTO dto) {
         // Validación: Evitamos duplicar nombres en el catálogo
@@ -51,7 +76,12 @@ public class VaccineService {
         return vaccineMapper.toDto(vaccineRepository.save(vaccine));
     }
 
-    // Elimina una vacuna del catálogo
+    /**
+     * Elimina una vacuna del catálogo por su identificador.
+     *
+     * @param id identificador de la vacuna a eliminar
+     * @throws ResourceNotFoundException si no existe la vacuna con ese ID
+     */
     @Transactional
     public void deleteById(Long id) {
         if (!vaccineRepository.existsById(id)) {
@@ -62,7 +92,13 @@ public class VaccineService {
 
     // ---------- MÉTODOS ESPECÍFICOS ----------
 
-    // Busca una vacuna por su nombre exacto
+    /**
+     * Busca una vacuna por su nombre exacto.
+     *
+     * @param name nombre de la vacuna a buscar
+     * @return {@link VaccineDTO} con los datos de la vacuna
+     * @throws ResourceNotFoundException si no existe ninguna vacuna con ese nombre
+     */
     @Transactional(readOnly = true)
     public VaccineDTO findByName(String name) {
         return vaccineRepository.findByName(name)
@@ -70,7 +106,15 @@ public class VaccineService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vacuna no encontrada con nombre: " + name));
     }
 
-    // Comprueba la existencia de una vacuna antes de crear registros sanitarios
+    /**
+     * Comprueba si existe una vacuna con el nombre indicado.
+     * <p>
+     * Útil para validaciones previas antes de crear registros de vacunación.
+     * </p>
+     *
+     * @param name nombre de la vacuna a comprobar
+     * @return {@code true} si existe, {@code false} en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean existsByName(String name) {
         return vaccineRepository.existsByName(name);
