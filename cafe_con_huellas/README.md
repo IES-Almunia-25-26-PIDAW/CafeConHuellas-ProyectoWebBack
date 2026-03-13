@@ -142,6 +142,8 @@ Accede a tu cliente MySQL y ejecuta:
 ```sql
 CREATE DATABASE cafe_con_huellas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
+> ℹ️ Solo es necesario crear la base de datos. Las tablas se generan
+> automáticamente al arrancar la aplicación gracias a Hibernate (`ddl-auto=update`).
 
 ---
 
