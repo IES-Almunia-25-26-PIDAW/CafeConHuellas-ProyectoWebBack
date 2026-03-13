@@ -15,7 +15,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
-// Controlador para autenticación: login y registro público
+/**
+ * Controlador REST para la autenticación de usuarios.
+ * <p>
+ * Gestiona el acceso al sistema mediante login con JWT y el registro
+ * público de nuevos usuarios. Ambos endpoints son de acceso libre.
+ * </p>
+ */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -26,7 +32,16 @@ public class AuthController {
     private final JwtService jwtService;
     private final UserService userService;
 
-    // Endpoint de login: recibe email y contraseña, devuelve token JWT
+    /**
+     * Autentica a un usuario y devuelve un token JWT.
+     * <p>
+     * Verifica las credenciales contra la base de datos usando BCrypt.
+     * Si son correctas, genera y devuelve un token JWT junto con los datos básicos del usuario.
+     * </p>
+     *
+     * @param loginDTO objeto con email y contraseña del usuario
+     * @return {@link AuthResponseDTO} con el token JWT, email y rol del usuario
+     */
     @PostMapping("/login")
     public AuthResponseDTO login(@Valid @RequestBody LoginDTO loginDTO) {
 
@@ -54,7 +69,17 @@ public class AuthController {
                 .build();
     }
 
-    // Endpoint de registro público: cualquiera puede crear una cuenta
+
+    /**
+     * Registra un nuevo usuario en el sistema.
+     * <p>
+     * Endpoint público disponible para cualquier persona.
+     * Delega la validación y persistencia al servicio de usuarios.
+     * </p>
+     *
+     * @param registerDTO datos del nuevo usuario a registrar
+     * @return {@link UserDetailDTO} con la información del usuario creado
+     */
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public UserDetailDTO register(@Valid @RequestBody RegisterDTO registerDTO) {

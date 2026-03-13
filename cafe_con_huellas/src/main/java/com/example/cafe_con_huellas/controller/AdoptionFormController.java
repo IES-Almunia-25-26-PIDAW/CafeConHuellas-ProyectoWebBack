@@ -10,7 +10,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-// Controlador para gestionar el flujo del formulario público de adopción
+/**
+ * Controlador REST para gestionar el flujo del formulario público de adopción.
+ * <p>
+ * Implementa un proceso en tres pasos: el administrador envía el formulario
+ * por email al usuario interesado, el usuario valida su token de acceso,
+ * y finalmente envía el formulario cumplimentado.
+ * Los endpoints de validación y envío son públicos y no requieren autenticación.
+ * </p>
+ */
 @RestController
 @RequestMapping("/api/adoption-form")
 @RequiredArgsConstructor
@@ -20,8 +28,17 @@ public class AdoptionFormController {
     private final AdoptionRequestService adoptionRequestService; // NUEVO
     private final EmailService emailService;
 
-    // Endpoint protegido: el admin envía el formulario a un usuario interesado
-    // Genera el token y manda el correo automáticamente
+
+    /**
+     * Genera un token de acceso y envía el formulario de adopción por email al usuario.
+     * <p>
+     * El token tiene una expiración limitada y solo puede usarse una vez.
+     * Requiere rol ADMIN.
+     * </p>
+     *
+     * @param userId identificador del usuario destinatario
+     * @param petId  identificador de la mascota sobre la que se solicita la adopción
+     */
     @PostMapping("/send")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
@@ -33,8 +50,17 @@ public class AdoptionFormController {
         tokenService.generateAndSendFormToken(userId, petId);
     }
 
-    // Endpoint PÚBLICO: el usuario accede desde el enlace del correo
-    // No necesita estar logueado porque el token es su identificación
+
+    /**
+     * Valida el token recibido por email y devuelve los datos para mostrar el formulario.
+     * <p>
+     * Endpoint público accesible desde el enlace del correo.
+     * Verifica que el token sea válido, no haya expirado y no haya sido utilizado.
+     * </p>
+     *
+     * @param token token único incluido en el enlace del correo
+     * @return {@link AdoptionFormTokenResponse} con los datos del usuario y la mascota
+     */
     @GetMapping("/validate/{token}")
     public AdoptionFormTokenResponse validateToken(@PathVariable String token) {
 
@@ -51,8 +77,18 @@ public class AdoptionFormController {
         );
     }
 
-    // Endpoint PÚBLICO: el usuario envía el formulario rellenado
-    // No necesita login, el token le identifica
+
+    /**
+     * Procesa y guarda el formulario de adopción cumplimentado por el usuario.
+     * <p>
+     * Endpoint público identificado mediante token. Tras guardar la solicitud,
+     * notifica al administrador y envía confirmación al usuario por email.
+     * El token se marca como usado para evitar envíos duplicados.
+     * </p>
+     *
+     * @param token   token único que identifica al usuario y la mascota
+     * @param request datos del formulario rellenado por el usuario
+     */
     @PostMapping("/submit/{token}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void submitAdoptionForm(
