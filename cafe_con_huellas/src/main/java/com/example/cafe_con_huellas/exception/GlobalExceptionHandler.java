@@ -12,30 +12,51 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
- * Esta clase centraliza el manejo de excepciones de todos los controladores.
- * Con @RestControllerAdvice, Spring "escucha" si ocurre un error en cualquier API
- * y lo redirige aquí para darle un formato bonito al usuario.
+/**
+ * Manejador global de excepciones para todos los controladores REST.
+ * <p>
+ * Centraliza el tratamiento de errores mediante {@code @RestControllerAdvice},
+ * interceptando las excepciones lanzadas en cualquier punto de la aplicación
+ * y devolviendo siempre una respuesta JSON uniforme con el timestamp y el mensaje.
+ * </p>
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 404 - Recurso no encontrado
+    /**
+     * Maneja los errores de recurso no encontrado.
+     * Devuelve HTTP {@code 404 Not Found}.
+     *
+     * @param ex excepción capturada con el mensaje del recurso no encontrado
+     * @return respuesta JSON con timestamp y mensaje de error
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex) {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    // 400 - Petición incorrecta
+    /**
+     * Maneja los errores de petición incorrecta o datos inválidos.
+     * Devuelve HTTP {@code 400 Bad Request}.
+     *
+     * @param ex excepción capturada con el mensaje del error de negocio
+     * @return respuesta JSON con timestamp y mensaje de error
+     */
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(BadRequestException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    /*
-     * 400 - Errores de validación (@Valid en los DTOs).
-     * Este caso es especial porque necesitamos extraer la lista de errores
-     * de cada campo que falló la validación, por eso no usa buildResponse().
+    /**
+     * Maneja los errores de validación de los DTOs anotados con {@code @Valid}.
+     * <p>
+     * Extrae el mensaje de error de cada campo que no superó la validación
+     * y los devuelve como una lista en la respuesta.
+     * Devuelve HTTP {@code 400 Bad Request}.
+     * </p>
+     *
+     * @param ex excepción capturada con la lista de errores de validación por campo
+     * @return respuesta JSON con timestamp, mensaje genérico y lista de errores de campo
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
@@ -54,16 +75,25 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    // 500 - Cualquier otro error no controlado cae aquí como red de seguridad
+    /**
+     * Maneja cualquier excepción no controlada explícitamente como red de seguridad.
+     * Devuelve HTTP {@code 500 Internal Server Error}.
+     *
+     * @param ex excepción genérica capturada
+     * @return respuesta JSON con timestamp y mensaje de error interno
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor");
     }
 
-    /*
-     * 403 - Acceso denegado.
-     * Se dispara cuando un usuario autenticado intenta acceder a un recurso
-     * para el que no tiene permisos (p. ej. un USER accediendo a rutas de ADMIN).
+    /**
+     * Maneja los errores de acceso denegado cuando un usuario autenticado
+     * intenta acceder a un recurso para el que no tiene permisos.
+     * Devuelve HTTP {@code 403 Forbidden}.
+     *
+     * @param ex excepción de autorización denegada
+     * @return respuesta JSON con timestamp y mensaje de acceso denegado
      */
     @ExceptionHandler(org.springframework.security.authorization.AuthorizationDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAuthorizationDenied(
@@ -71,10 +101,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, "Acceso denegado");
     }
 
-    /*
-     * 401 - Credenciales incorrectas.
-     * Se dispara cuando el usuario envía un usuario o contraseña equivocados
-     * durante el proceso de login.
+    /**
+     * Maneja los errores de credenciales incorrectas durante el proceso de login.
+     * Devuelve HTTP {@code 401 Unauthorized}.
+     *
+     * @param ex excepción de credenciales inválidas
+     * @return respuesta JSON con timestamp y mensaje de credenciales incorrectas
      */
     @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentials(
@@ -82,17 +114,22 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
     }
 
-    /*
-     * Método auxiliar para construir la respuesta JSON de error de forma uniforme.
-     * Todos los handlers (excepto el de validación) delegan aquí para garantizar
-     * que el formato de la respuesta sea siempre el mismo:
-     *   {
-     *     "timestamp": "...",
-     *     "message": "..."
-     *   }
+    /**
+     * Método auxiliar que construye la respuesta JSON de error de forma uniforme.
+     * <p>
+     * Todos los manejadores excepto el de validación delegan aquí para garantizar
+     * que el formato de respuesta sea siempre consistente:
+     * </p>
+     * <pre>
+     * {
+     *   "timestamp": "...",
+     *   "message": "..."
+     * }
+     * </pre>
      *
-     * IMPORTANTE: devuelve Map<String, Object> (no Object) para que sea compatible
-     * con el tipo de retorno declarado en todos los @ExceptionHandler de esta clase.
+     * @param status  código HTTP que se devolverá en la respuesta
+     * @param message mensaje descriptivo del error
+     * @return {@link ResponseEntity} con el cuerpo JSON y el código de estado indicado
      */
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
         Map<String, Object> body = new LinkedHashMap<>();

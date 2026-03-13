@@ -8,7 +8,14 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-// Configuración de Swagger con soporte JWT global
+/**
+ * Configuración de la documentación OpenAPI (Swagger) con soporte JWT global.
+ * <p>
+ * Define el esquema de autenticación Bearer para que Swagger UI
+ * incluya automáticamente el token JWT en todas las peticiones de prueba.
+ * La documentación es accesible en {@code /swagger-ui.html}.
+ * </p>
+ */
 @Configuration
 @SecurityScheme(
         name = "bearerAuth",
@@ -18,6 +25,12 @@ import org.springframework.context.annotation.Configuration;
 )
 public class SwaggerConfig {
 
+    /**
+     * Configura la instancia de OpenAPI con la información del proyecto
+     * y aplica el esquema de seguridad JWT a todos los endpoints de forma global.
+     *
+     * @return instancia de {@link OpenAPI} con los metadatos y la seguridad configurados
+     */
     @Bean
     public OpenAPI customOpenAPI() {
         // Añadimos el esquema de seguridad a TODOS los endpoints automáticamente

@@ -12,16 +12,33 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-// Implementación de UserDetailsService que Spring Security necesita obligatoriamente
-// Le dice a Spring cómo buscar un usuario en nuestra BD para autenticarlo
+/**
+ * Implementación de {@link UserDetailsService} que conecta Spring Security con la base de datos.
+ * <p>
+ * Spring Security llama automáticamente a esta clase para cargar los datos
+ * de un usuario durante el proceso de autenticación. Busca al usuario por
+ * email en la base de datos y construye el objeto {@link UserDetails}
+ * con su contraseña encriptada y su rol con el prefijo {@code ROLE_}.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    // Spring llama a este método automáticamente cuando necesita autenticar a alguien
-    // El "username" en nuestro caso es el email
+    /**
+     * Carga los datos de un usuario a partir de su email para que Spring Security
+     * pueda verificar sus credenciales y establecer sus permisos.
+     * <p>
+     * El rol del usuario se convierte al formato que espera Spring Security,
+     * añadiendo el prefijo {@code ROLE_} (ej: {@code ROLE_ADMIN}, {@code ROLE_USER}).
+     * </p>
+     *
+     * @param email email del usuario a cargar, usado como identificador de login
+     * @return {@link UserDetails} con el email, la contraseña encriptada y los permisos
+     * @throws UsernameNotFoundException si no existe ningún usuario con ese email
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
