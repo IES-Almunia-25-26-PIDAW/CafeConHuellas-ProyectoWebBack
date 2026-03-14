@@ -9,7 +9,14 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.List;
 
-// Representa a una mascota disponible en el sistema
+/**
+ * Entidad que representa a una mascota disponible en el refugio.
+ * <p>
+ * Almacena la información descriptiva, médica y visual del animal.
+ * Incluye una relación con su galería de imágenes adicionales.
+ * Mapea a la tabla {@code Pet}.
+ * </p>
+ */
 @Entity
 @Table(name = "Pet")
 @Data
@@ -18,50 +25,57 @@ import java.util.List;
 @Builder
 public class Pet {
 
+    /** Identificador único autoincremental de la mascota. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Nombre de la mascota. */
     @Column(nullable = false)
     private String name;
 
-    // Uso de TEXT para descripciones largas de la personalidad o historia de la mascota
+    /** Descripción de la personalidad, historia o características del animal. */
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    // Raza de la mascota
+    /** Raza de la mascota. */
     @Column(nullable = false)
     private String breed;
 
-    // Ejemplo: PERRO, GATO
-    // Usamos STRING para que en la BD se guarde el texto y no la posición numérica
+    /** Categoría del animal (PERRO o GATO). Almacenada como texto en base de datos. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PetCategory category;;
 
+    /** Edad de la mascota en años. */
     @Column(nullable = false)
     private Integer age;
 
+    /** Peso de la mascota en kilogramos. */
     @Column(nullable = false)
     private BigDecimal weight;
 
-    // Indica si está esterilizado (true/false)
+    /** Indica si la mascota está esterilizada. */
     @Column(nullable = false)
     private Boolean neutered;
 
-    // Indica si es Perro Potencialmente Peligroso
+    /** Indica si la mascota está clasificada como Perro Potencialmente Peligroso (PPP). */
     @Column(name = "is_ppp", nullable = false)
     private Boolean isPpp = false;
 
+    /** URL de la imagen principal de la mascota. */
     @Column(name = "image_url")
     private String imageUrl;
 
 
-    /* Relación con la galería de fotos extra:
-       - cascade: si borras la mascota, se borran sus fotos.
-       - orphanRemoval: si quitas una foto de la lista, se elimina de la BD.
-       - fetch = LAZY: las fotos solo se cargan si realmente se necesitan.
-    */
+    /**
+     * Relación con la galería de imágenes adicionales de la mascota.
+     * <p>
+     * Se carga de forma lazy para optimizar el rendimiento.
+     * Al eliminar la mascota, todas sus imágenes se eliminan en cascada.
+     * orphanRemoval: si quitas una foto de la lista, se elimina de la BD.
+     * </p>
+     */
     @OneToMany(
             mappedBy = "pet",
             cascade = CascadeType.ALL,

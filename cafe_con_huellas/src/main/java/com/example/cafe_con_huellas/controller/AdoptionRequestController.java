@@ -61,11 +61,11 @@ public class AdoptionRequestController {
     }
 
     /**
-     * Obtiene el detalle de una solicitud de adopción concreta.
+     * Actualiza el estado de una solicitud de adopción (aprobar o rechazar).
      *
-     * @param id identificador único de la solicitud
-     * @return {@link AdoptionRequestDTO} con los datos de la solicitud
-     * @throws ResourceNotFoundException si no existe solicitud con ese ID
+     * @param id     identificador de la solicitud a actualizar
+     * @param status nuevo estado a asignar ({@link AdoptionRequestStatus})
+     * @return {@link AdoptionRequestDTO} con el estado actualizado
      */
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")

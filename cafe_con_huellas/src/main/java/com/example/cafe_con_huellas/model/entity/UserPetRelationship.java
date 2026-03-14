@@ -8,7 +8,15 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-// Define el vínculo formal entre un usuario y una mascota (ej. adopción, acogida)
+/**
+ * Entidad que representa el vínculo formal entre un usuario y una mascota.
+ * <p>
+ * Registra los distintos tipos de relación que puede tener un usuario
+ * con un animal del refugio (adopción, acogida, paseo, voluntariado),
+ * incluyendo las fechas de inicio y fin y si el vínculo sigue activo.
+ * Mapea a la tabla {@code User_Pet_Relationship}.
+ * </p>
+ */
 @Entity
 @Table(name = "User_Pet_Relationship")
 @Data
@@ -17,35 +25,41 @@ import java.time.LocalDate;
 @Builder
 public class UserPetRelationship {
 
+    /** Identificador único autoincremental del vínculo. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // El usuario (humano) que participa en la relación
-    // Permite que una misma persona pueda tener múltiples vínculos registrados
+    /**
+     * Usuario que participa en el vínculo.
+     * Una misma persona puede tener múltiples vínculos registrados.
+     */
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
     private User user;
 
-    // La mascota que forma parte del vínculo
-    // Permite que una mascota haya tenido diferentes relaciones a lo largo del tiempo
+    /**
+     * Mascota que forma parte del vínculo.
+     * Una mascota puede haber tenido diferentes relaciones a lo largo del tiempo.
+     */
     @ManyToOne(optional = false)
     @JoinColumn(name = "pet_id")
     private Pet pet;
 
-    // Clasifica si la relación es adopción, acogida, etc.
+    /** Tipo de vínculo establecido entre el usuario y la mascota. */
     @Enumerated(EnumType.STRING)
     @Column(name = "relationship_type", nullable = false)
     private RelationshipType relationshipType;
 
+    /** Fecha en la que comenzó el vínculo. */
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    // Fecha de finalización ( aplica para acogidas temporales o paseos)
+    /** Fecha de finalización del vínculo. Aplica principalmente a acogidas temporales y paseos. */
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    // Indica si el vínculo sigue vigente (ej. si la mascota sigue en acogida)
+    /** Indica si el vínculo sigue vigente en la actualidad. */
     @Column(nullable = false)
     private Boolean active;
 

@@ -6,7 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// Representa una foto individual dentro de la galería de una mascota
+/**
+ * Entidad que representa una foto individual dentro de la galería de una mascota.
+ * <p>
+ * Permite asociar múltiples imágenes a un mismo animal.
+ * Mapea a la tabla {@code Pet_Image}.
+ * </p>
+ */
 @Entity
 @Table(name = "Pet_Image")
 @Data
@@ -15,17 +21,20 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PetImage {
 
+    /** Identificador único autoincremental de la imagen. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relación que vincula esta imagen a una mascota específica
-    // Muchas imágenes pueden pertenecer a una misma mascota
+    /**
+     * Relación: mascota a la que pertenece esta imagen.
+     * Muchas imágenes pueden pertenecer a una misma mascota.
+     */
     @ManyToOne(optional = false)
     @JoinColumn(name = "pet_id")
     private Pet pet;
 
-    // Dirección (link) donde está almacenada la imagen
+    /** URL donde está almacenada la imagen. */
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 

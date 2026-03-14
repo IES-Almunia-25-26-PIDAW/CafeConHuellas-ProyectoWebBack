@@ -7,20 +7,37 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
-// Repositorio para controlar los vínculos (adopción, acogida, etc.) entre personas y mascotas
-/* Hereda métodos CRUD automáticos de JPA (save, findById, findAll, delete)
- * No requiere implementación manual para operaciones básicas
+/**
+ * Repositorio JPA para la gestión de los vínculos entre usuarios y mascotas.
+ * <p>
+ * Hereda los métodos CRUD básicos de {@link JpaRepository}.
+ * Proporciona filtros por usuario, mascota y estado activo del vínculo.
+ * </p>
  */
 @Repository
 public interface UserPetRelationshipRepository extends JpaRepository<UserPetRelationship,Long> {
 
-    // Relaciones asociadas a un usuario
+    /**
+     * Devuelve todos los vínculos asociados a un usuario concreto.
+     *
+     * @param userId identificador del usuario
+     * @return lista de vínculos del usuario indicado
+     */
     List<UserPetRelationship> findByUserId(Long userId);
 
-    // Relaciones asociadas a una mascota
+    /**
+     * Devuelve todos los vínculos asociados a una mascota concreta.
+     *
+     * @param petId identificador de la mascota
+     * @return lista de vínculos de la mascota indicada
+     */
     List<UserPetRelationship> findByPetId(Long petId);
 
-    // Relaciones que siguen activas
+    /**
+     * Devuelve únicamente los vínculos que están actualmente activos.
+     *
+     * @return lista de vínculos con {@code active} igual a {@code true}
+     */
     List<UserPetRelationship> findByActiveTrue();
 
 }

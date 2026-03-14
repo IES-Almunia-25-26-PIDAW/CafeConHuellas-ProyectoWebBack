@@ -35,6 +35,7 @@ public class AdoptionRequestService {
      *
      * @param token token UUID que identifica al usuario y la mascota
      * @param dto   datos del formulario rellenado por el usuario
+     * @return {@link AdoptionRequestDTO} con el registro persistido
      */
     @Transactional
     public AdoptionRequestDTO save(String token, AdoptionRequestDTO dto) {

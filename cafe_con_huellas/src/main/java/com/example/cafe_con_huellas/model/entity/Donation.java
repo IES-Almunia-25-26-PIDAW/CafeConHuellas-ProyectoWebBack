@@ -9,7 +9,15 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-// Representa una donación realizada por un usuario en el sistema
+/**
+ * Entidad que representa una donación registrada en el sistema.
+ * <p>
+ * Soporta tanto donaciones de usuarios registrados como donaciones anónimas
+ * (con {@code user} a {@code null}). La fecha se asigna automáticamente
+ * si no se proporciona.
+ * Mapea a la tabla {@code Donation}.
+ * </p>
+ */
 @Entity
 @Table(name = "Donation")
 @Data
@@ -18,39 +26,47 @@ import java.time.LocalDateTime;
 @Builder
 public class Donation {
 
-    // Identificador único de la donación
+    /** Identificador único autoincremental de la donación. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relación que indica que un usuario puede realizar muchas donaciones
+
+    /**
+     * Usuario que realizó la donación.
+     * Puede ser {@code null} si la donación es anónima.
+     * Relación que indica que un usuario puede realizar muchas donaciones
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
-    // Fecha y hora exacta en la que se registró la donación
+    /** Fecha y hora exacta en la que se registró la donación. */
     @Column(nullable = false, insertable = false, updatable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime date;
 
-    // Define el tipo de donación (ej. "Monetaria", "Material", "Alimento")
+    /** Categoría de la donación (ej: MONETARIA, ALIMENTACION, MATERIAL). */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DonationCategory category;
 
-    // Define el método de donación (ej. "Transferencia", "Bizum", "Efectivo")
+    /** Método utilizado para realizar la donación (ej: BIZUM, TRANSFERENCIA). */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DonationMethod method;
 
-    // Valor monetario o cantidad de la donación
+    /** Importe o cantidad de la donación. */
     @Column(nullable = false)
     private BigDecimal amount;
 
-    // Notas adicionales
+    /** Notas adicionales sobre la donación. */
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    // Método que asegura que la fecha se asigne si no viene de la BD
+    /**
+     * Asigna automáticamente la fecha actual si no se ha proporcionado
+     * antes de persistir el registro.
+     */
     @PrePersist
     protected void onCreate() {
         if (this.date == null) {

@@ -271,6 +271,15 @@ src/
 ```
 
 ---
+## 📚 Documentación
+
+La documentación técnica del proyecto ha sido generada con **Javadoc** y cubre todas las capas de la aplicación: controladores, servicios, repositorios, entidades, DTOs, mappers, seguridad y configuración.
+
+Para consultarla localmente:
+
+1. Clona el repositorio
+2. Abre el archivo `docs/javadoc/index.html` en tu navegador
+---
 
 ## 👩‍💻 Autoras
 

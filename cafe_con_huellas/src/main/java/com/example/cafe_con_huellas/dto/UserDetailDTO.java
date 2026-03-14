@@ -9,39 +9,51 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// DTO completo para detalles de usuario
+/**
+ * DTO completo para la consulta y actualización del perfil de un usuario.
+ * <p>
+ * No incluye la contraseña, ya que este DTO se usa únicamente en respuestas
+ * y actualizaciones de perfil. Para el registro usar {@link RegisterDTO}.
+ * </p>
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UserDetailDTO {
 
+    /** Identificador único del usuario. Nulo en creaciones. */
     private Long id;
 
+    /** Nombre de pila del usuario. Entre 2 y 50 caracteres. */
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 2, max = 50, message = "El nombre debe tener entre 2 y 50 caracteres")
     private String firstName;
 
+    /** Primer apellido del usuario. Entre 2 y 50 caracteres. */
     @NotBlank(message = "El primer apellido es obligatorio")
     @Size(min = 2, max = 50, message = "El apellido debe tener entre 2 y 50 caracteres")
     private String lastName1;
 
-    // El segundo apellido es opcional, pero si se pone, validamos su tamaño
+    /** Segundo apellido del usuario. Opcional. Máximo 50 caracteres. */
     @Size(max = 50, message = "El segundo apellido no puede exceder los 50 caracteres")
     private String lastName2;
 
+    /** Email del usuario. Único en el sistema. */
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El formato del email no es válido")
     private String email;
 
+    /** Teléfono de contacto. Debe tener exactamente 9 dígitos numéricos. */
     @NotBlank(message = "El teléfono es obligatorio")
     @Pattern(regexp = "^[0-9]{9}$", message = "El teléfono debe tener exactamente 9 dígitos numéricos")
     private String phone;
 
+    /** Rol del usuario en el sistema (ADMIN o USER). El mapper lo convierte al enum correspondiente. */
     @NotBlank(message = "El rol de usuario es obligatorio")
     private String role; // El Mapper lo convertirá al Enum UserRole
 
-    // Imagen de perfil del usuario (opcional)
+    /** URL de la foto de perfil del usuario. Debe ser una URL válida. Opcional. */
     @Pattern(regexp = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]",
             message = "La imagen de perfil debe ser una URL válida")
     private String imageUrl;

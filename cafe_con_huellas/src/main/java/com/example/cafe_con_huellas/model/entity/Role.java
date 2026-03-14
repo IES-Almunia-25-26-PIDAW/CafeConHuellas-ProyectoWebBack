@@ -1,8 +1,11 @@
 package com.example.cafe_con_huellas.model.entity;
 
-// Define los niveles de acceso o permisos que puede tener un usuario en el sistema
-// ADMIN: Tiene control total sobre el sistema (gestión de mascotas, usuarios y adopciones)
-// USER: Usuario estándar con permisos limitados (ver mascotas y solicitar adopciones)
+/**
+ * Enumerado que define los niveles de acceso de los usuarios en el sistema.
+ */
 public enum Role {
-    ADMIN, USER
+    /** Acceso total al sistema: gestión de mascotas, usuarios y procesos de adopción. */
+    ADMIN,
+    /** Usuario estándar con permisos limitados: consulta del catálogo y solicitud de adopciones. */
+    USER
 }

@@ -25,9 +25,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
  * y habilita la seguridad a nivel de método con {@code @PreAuthorize}.
  * </p>
  */
-// Activamos la seguridad a nivel de método para poder usar @PreAuthorize
 @EnableMethodSecurity
-// Configuración central de Spring Security
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -77,8 +75,6 @@ public class SecurityConfig {
 
     /**
      * Define la cadena de filtros de seguridad HTTP de la aplicación.
-     * <p>
-     * Configura los siguientes aspectos:
      * <ul>
      *   <li>CSRF desactivado al usar JWT en lugar de sesiones.</li>
      *   <li>Política de sesiones sin estado: cada petición debe incluir su propio token.</li>
@@ -86,7 +82,6 @@ public class SecurityConfig {
      *   <li>El resto de rutas requieren autenticación.</li>
      *   <li>El filtro {@link JwtAuthFilter} se ejecuta antes del filtro estándar de Spring.</li>
      * </ul>
-     * </p>
      *
      * @param http objeto de configuración de seguridad HTTP
      * @return {@link SecurityFilterChain} con la configuración aplicada

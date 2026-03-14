@@ -6,7 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// Representa la lista de "favoritos" o "intereses" de los usuarios por las mascotas
+/**
+ * Entidad que representa una mascota marcada como favorita por un usuario.
+ * <p>
+ * Implementa la relación N:M entre {@link User} y {@link Pet}
+ * para la funcionalidad de lista de interés o favoritos.
+ * Mapea a la tabla {@code User_Pet_Favorites}.
+ * </p>
+ */
 @Entity
 @Table(name = "User_Pet_Favorites")
 @Data
@@ -15,18 +22,23 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserPetFavorite {
 
+    /** Identificador único autoincremental del registro. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // El usuario que marcó la mascota como favorita
-    // Un usuario puede tener muchas mascotas en su lista de favoritos
+    /**
+     * Usuario que marcó la mascota como favorita.
+     * Un usuario puede tener múltiples mascotas en su lista.
+     */
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
     private User user;
 
-    // La mascota que fue marcada como favorita
-    // Una mascota puede ser la favorita de muchos usuarios diferentes
+    /**
+     * Mascota marcada como favorita.
+     * Una mascota puede ser favorita de múltiples usuarios diferentes.
+     */
     @ManyToOne(optional = false)
     @JoinColumn(name = "pet_id")
     private Pet pet;

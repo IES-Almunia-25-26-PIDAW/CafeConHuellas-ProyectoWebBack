@@ -9,8 +9,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-// Representa un token único y temporal para el formulario público de adopción
-// Permite que el usuario acceda al formulario sin necesidad de estar logueado
+/**
+ * Entidad que representa un token único y temporal para el formulario público de adopción.
+ * <p>
+ * Permite al usuario acceder al formulario sin necesidad de estar autenticado.
+ * El token se genera como UUID, tiene una validez de 48 horas y solo puede usarse una vez.
+ * Mapea a la tabla {@code Adoption_Form_Token}.
+ * </p>
+ */
 @Entity
 @Table(name = "Adoption_Form_Token")
 @Data
@@ -19,42 +25,49 @@ import java.time.LocalDateTime;
 @Builder
 public class AdoptionFormToken {
 
+    /** Identificador único autoincremental del token. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Token UUID único que se enviará en el enlace del correo
+    /** Token UUID único que se envía en el enlace del correo electrónico. */
     @Column(nullable = false, unique = true)
     private String token;
 
-    // Usuario interesado en la adopción
+    /** Usuario interesado en la adopción al que se envía el formulario. */
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
     private User user;
 
-    // Mascota sobre la que se solicita la adopción
+    /** Mascota sobre la que se solicita la adopción. */
     @ManyToOne(optional = false)
     @JoinColumn(name = "pet_id")
     private Pet pet;
 
-    // Fecha de creación del token
+    /** Fecha y hora en la que se generó el token. */
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // Fecha de expiración, por defecto 48 horas después de crearse
+    /** Fecha y hora de expiración del token (48 horas tras su creación). */
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
-    // Indica si el formulario ya fue rellenado y el token usado
+    /** Indica si el formulario ya fue rellenado y el token ha sido consumido. */
     @Column(nullable = false)
     private Boolean used;
 
-    // Relacion 1-1: Solicitud generada cuando el usuario rellena el formulario
-    // mappedBy indica que AdoptionRequest es el lado dueño de la relación
+
+    /**
+     * Solicitud de adopción generada cuando el usuario completa el formulario.
+     * Relación 1:1 inversa gestionada por {@link AdoptionRequest}.
+     */
     @OneToOne(mappedBy = "formToken")
     private AdoptionRequest adoptionRequest;
 
-    // Asigna automáticamente los valores al crear el token
+    /**
+     * Asigna automáticamente la fecha de creación, la fecha de expiración
+     * y marca el token como no utilizado antes de persistirlo.
+     */
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

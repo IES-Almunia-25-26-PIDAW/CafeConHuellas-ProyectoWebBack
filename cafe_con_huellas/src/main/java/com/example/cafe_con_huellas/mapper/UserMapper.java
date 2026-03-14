@@ -7,31 +7,66 @@ import com.example.cafe_con_huellas.model.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-/*
- * Mapper para la entidad User.
- * Diferencia entre la vista detallada (perfil) y la vista resumida (listados).
+/**
+ * Mapper MapStruct para la conversión entre {@link User} y sus proyecciones DTO.
+ * <p>
+ * Diferencia entre la vista detallada para el perfil ({@link UserDetailDTO})
+ * y la vista resumida para listados administrativos ({@link UserSummaryDTO}).
+ * La contraseña se ignora siempre al convertir a entidad para no sobrescribirla.
+ * </p>
  */
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    // De Entidad a DTO Detallado (Perfil)
+    /**
+     * Convierte una entidad {@link User} a su DTO detallado.
+     * El rol se convierte automáticamente de enum a String.
+     *
+     * @param entity entidad a convertir
+     * @return {@link UserDetailDTO} con el perfil completo del usuario
+     */
     @Mapping(source = "role", target = "role")
     UserDetailDTO toDetailDto(User entity);
 
-    // De Entidad a DTO Resumido (Listados administrativos)
+
+    /**
+     * Convierte una entidad {@link User} a su DTO resumido para listados.
+     *
+     * @param entity entidad a convertir
+     * @return {@link UserSummaryDTO} con los datos esenciales del usuario
+     */
     @Mapping(source = "role", target = "role")
     UserSummaryDTO toSummaryDto(User entity);
 
     // --- MÉTODOS ADICIONALES PARA EL SERVICIO ---
 
-    // Convierte de Detalle a Resumen
+    /**
+     * Convierte un {@link UserDetailDTO} a su versión resumida.
+     * Útil para construir listados a partir de datos ya cargados.
+     *
+     * @param detailDto DTO detallado a convertir
+     * @return {@link UserSummaryDTO} con los datos esenciales
+     */
     UserSummaryDTO toSummaryDto(UserDetailDTO detailDto);
 
-    // De DTO Detallado a Entidad (Para registro y actualizaciones)
+    /**
+     * Convierte un {@link UserDetailDTO} a su entidad.
+     * La contraseña se ignora para no sobrescribir el hash BCrypt almacenado.
+     *
+     * @param dto DTO a convertir
+     * @return {@link User} con los datos mapeados sin contraseña
+     */
     @Mapping(target = "password", ignore = true)
     User toEntity(UserDetailDTO dto);
 
-    // Helper para el Rol
+    /**
+     * Helper para el role.
+     * Convierte un String al enum {@link Role} correspondiente.
+     * Si el valor es nulo o no válido, devuelve {@code null} o {@link Role#USER} respectivamente.
+     *
+     * @param role nombre del rol en texto
+     * @return {@link Role} correspondiente, o {@link Role#USER} si no es reconocido
+     */
     default Role roleFromString(String role) {
         if (role == null) return null;
         try {

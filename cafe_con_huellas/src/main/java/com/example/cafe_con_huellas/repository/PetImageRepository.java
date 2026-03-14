@@ -6,17 +6,28 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-// Repositorio para gestionar las imágenes adicionales de la galería de cada mascota
-/* Hereda métodos CRUD automáticos de JPA (save, findById, findAll, delete)
- * No requiere implementación manual para operaciones básicas
-*/
+/**
+ * Repositorio JPA para la gestión de la galería de imágenes de las mascotas.
+ * <p>
+ * Hereda los métodos CRUD básicos de {@link JpaRepository}.
+ * </p>
+ */
 @Repository
 public interface PetImageRepository extends JpaRepository<PetImage, Long> {
 
-    // Devuelve todas las imágenes asociadas a una mascota
+    /**
+     * Devuelve todas las imágenes asociadas a una mascota específica.
+     *
+     * @param petId identificador de la mascota
+     * @return lista de imágenes de la mascota indicada
+     */
     List<PetImage> findByPetId(Long petId);
 
-    // Elimina todas las imágenes asociadas a una mascota
+    /**
+     * Elimina todas las imágenes asociadas a una mascota de forma masiva.
+     *
+     * @param petId identificador de la mascota cuyas imágenes se eliminarán
+     */
     void deleteByPetId(Long petId);
 
 }

@@ -4,16 +4,30 @@ import com.example.cafe_con_huellas.model.entity.AdoptionDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-// Repositorio para acceder a los detalles legales y técnicos de las adopciones
-/* Hereda métodos CRUD automáticos de JPA (save, findById, findAll, delete)
- * No requiere implementación manual para operaciones básicas
+/**
+ * Repositorio JPA para el acceso a los detalles post-adopción.
+ * <p>
+ * Hereda los métodos CRUD básicos de {@link JpaRepository}.
+ * </p>
  */
 @Repository
 public interface AdoptionDetailRepository extends JpaRepository<AdoptionDetail,Long> {
-    // Busca por la relación
+
+    /**
+     * Busca el detalle de adopción asociado a una relación usuario-mascota concreta.
+     *
+     * @param relationshipId identificador de la relación usuario-mascota
+     * @return {@link AdoptionDetail} asociado, o {@code null} si no existe
+     */
     AdoptionDetail findByRelationshipId(Long relationshipId);
 
-    // Evita duplicados
+    /**
+     * Comprueba si ya existe un detalle registrado para una relación concreta.
+     * Usado para evitar registros duplicados.
+     *
+     * @param relationshipId identificador de la relación a comprobar
+     * @return {@code true} si ya existe un detalle para esa relación
+     */
     boolean existsByRelationshipId(Long relationshipId);
 
 }

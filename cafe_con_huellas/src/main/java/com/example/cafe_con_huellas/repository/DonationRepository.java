@@ -9,31 +9,62 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-// Repositorio para gestionar el almacenamiento y consulta de donaciones
-/* Hereda métodos CRUD automáticos de JPA (save, findById, findAll, delete)
- * No requiere implementación manual para operaciones básicas
+/**
+ * Repositorio JPA para la gestión y consulta de donaciones.
+ * <p>
+ * Hereda los métodos CRUD básicos de {@link JpaRepository}.
+ * Incluye consultas JPQL para calcular totales agregados.
+ * </p>
  */
 @Repository
 public interface DonationRepository extends JpaRepository<Donation,Long> {
 
-    // Devuelve todas las donaciones realizadas por un usuario
+    /**
+     * Devuelve todas las donaciones realizadas por un usuario concreto.
+     *
+     * @param userId identificador del usuario
+     * @return lista de donaciones del usuario indicado
+     */
     List<Donation> findByUserId(Long userId);
 
-    // Devuelve donaciones filtradas por categoría
+    /**
+     * Filtra las donaciones por su categoría.
+     *
+     * @param category categoría por la que filtrar ({@link DonationCategory})
+     * @return lista de donaciones de la categoría indicada
+     */
     List<Donation> findByCategory(DonationCategory category);
 
-    // Devuelve donaciones filtradas por método
+    /**
+     * Filtra las donaciones por el método de pago utilizado.
+     *
+     * @param method método de pago por el que filtrar ({@link DonationMethod})
+     * @return lista de donaciones realizadas con ese método
+     */
     List<Donation> findByMethod(DonationMethod method);
 
-    // Suma total donada por un usuario
+    /**
+     * Calcula la suma total del importe donado por un usuario específico.
+     *
+     * @param userId identificador del usuario
+     * @return importe total acumulado, o {@code null} si no tiene donaciones
+     */
     @Query("SELECT SUM(d.amount) FROM Donation d WHERE d.user.id = :userId")
     java.math.BigDecimal sumAmountByUserId(Long userId);
 
-    // Suma total de todas las donaciones
+    /**
+     * Calcula la suma total del importe de todas las donaciones del sistema.
+     *
+     * @return importe total global, o {@code null} si no hay donaciones
+     */
     @Query("SELECT SUM(d.amount) FROM Donation d")
     java.math.BigDecimal sumTotalAmount();
 
-    // Buscar todas las donaciones anónimas donde user_id es null
+    /**
+     * Devuelve todas las donaciones anónimas, es decir, aquellas sin usuario asociado.
+     *
+     * @return lista de donaciones con {@code user} nulo
+     */
     List<Donation> findByUserIsNull();
 
 }
