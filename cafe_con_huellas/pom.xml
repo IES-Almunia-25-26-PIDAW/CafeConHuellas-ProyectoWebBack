@@ -16,6 +16,8 @@
 
     <properties>
         <java.version>17</java.version>
+        <project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>ISO-8859-1</project.reporting.outputEncoding>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
     </properties>
 
@@ -129,6 +131,7 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <encoding>ISO-8859-1</encoding>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -175,6 +178,13 @@
                         <version>9.1.0</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
+                    <encoding>ISO-8859-1</encoding>
+                </configuration>
             </plugin>
         </plugins>
     </build>

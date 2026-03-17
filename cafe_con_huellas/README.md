@@ -43,86 +43,34 @@ El sistema distingue dos tipos de usuarios:
 
 ---
 
-## 🗂️ Modelo de datos
-
-El proyecto cuenta con las siguientes entidades y relaciones:
-
-### Entidades principales
-
-| Entidad | Descripción |
-|---|---|
-| `User` | Usuarios del sistema (adoptantes y administradores). Tiene rol ADMIN o USER. |
-| `Pet` | Mascotas del refugio con toda su información (raza, edad, peso, categoría...). |
-| `Vaccine` | Catálogo de vacunas disponibles (datos maestros). |
-| `Event` | Eventos organizados por el refugio (jornadas, mercadillos, charlas...). |
-| `Donation` | Donaciones registradas en el sistema (pueden ser anónimas). |
-
-### Entidades de relación
-
-| Entidad | Descripción |
-|---|---|
-| `PetImage` | Fotos adicionales de una mascota. Relación **N:1** con `Pet`. |
-| `PetVaccine` | Registro de vacunas aplicadas a una mascota con fecha. Relación **N:1** con `Pet` y `Vaccine`. |
-| `UserPetRelationship` | Vínculo formal entre un usuario y una mascota (adopción, acogida, paseo, voluntariado). Relación **N:1** con `User` y `Pet`. |
-| `UserPetFavorite` | Lista de mascotas marcadas como favoritas por un usuario. Relación **N:1** con `User` y `Pet`. |
-
-### Entidades del flujo de adopción
-
-| Entidad | Descripción |
-|---|---|
-| `AdoptionFormToken` | Token único y temporal (48h) que el admin envía por email al usuario para acceder al formulario. Relación **N:1** con `User` y `Pet`. |
-| `AdoptionRequest` | Formulario rellenado por el usuario con sus datos de vivienda, convivencia y motivación. Relación **1:1** con `AdoptionFormToken`. |
-| `AdoptionDetail` | Detalles técnicos y de seguimiento registrados por el admin tras formalizar la adopción. Relación **1:1** con `UserPetRelationship`. |
-
-### Diagrama de relaciones
-
-```
-User ──────────────────────────────────────────────────┐
- │                                                      │
- ├──< Donation (N:1)                                    │
- ├──< UserPetFavorite (N:1) >── Pet                     │
- ├──< UserPetRelationship (N:1) >── Pet                 │
- │         └──── AdoptionDetail (1:1)                   │
- └──< AdoptionFormToken (N:1) >── Pet                   │
-           └──── AdoptionRequest (1:1)                  │
-                                                        │
-Pet ────────────────────────────────────────────────────┘
- ├──< PetImage (N:1)
- └──< PetVaccine (N:1) >── Vaccine
-
-Event  (entidad independiente)
-```
-
----
-
 ## 🛠️ Tecnologías utilizadas
 
 - **Java 17**
 - **Spring Boot 3.4.3**
 - **Spring Security + JWT** (autenticación stateless)
 - **Spring Data JPA + Hibernate**
-- **MySQL** (base de datos principal)
+- **Liquibase** (migraciones de base de datos)
+- **MySQL 8** (base de datos principal)
 - **H2** (base de datos en memoria para tests)
 - **MapStruct** (mapeo entre entidades y DTOs)
 - **Lombok**
 - **Swagger / OpenAPI 3** (documentación interactiva)
 - **Spring Mail** (envío de correos automáticos)
+- **Docker + Docker Compose**
 - **Maven**
 
 ---
 
 ## ✅ Requisitos previos
 
-Antes de levantar el proyecto, asegúrate de tener instalado:
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado y en ejecución
+- Una cuenta de Gmail con [contraseña de aplicación](https://myaccount.google.com/apppasswords) habilitada
 
-- [Java 17](https://adoptium.net/) o superior
-- [Maven 3.9+](https://maven.apache.org/download.cgi) (o usa el wrapper incluido `./mvnw`)
-- [MySQL 8+](https://dev.mysql.com/downloads/)
-- Una cuenta de Gmail con [contraseña de aplicación](https://myaccount.google.com/apppasswords) habilitada (para el envío de correos)
+> No necesitas tener Java, Maven ni MySQL instalados localmente. Docker se encarga de todo: descarga las imágenes necesarias, compila el proyecto y levanta tanto la base de datos como el servidor de forma automática.
 
 ---
 
-## 🚀 Instalación y puesta en marcha
+## 🚀 Instalación y puesta en marcha con Docker
 
 ### 1. Clonar el repositorio
 
@@ -131,90 +79,146 @@ git clone https://github.com/IES-Almunia-25-26-PIDAW/CafeConHuellas-ProyectoWebB
 cd CafeConHuellas-ProyectoWebBack
 ```
 
+### 2. Crear el archivo de variables de entorno
 
+El proyecto necesita credenciales que **no se guardan en el repositorio** por seguridad. Hay que crearlas manualmente.
 
----
+Crea un archivo llamado `.env` en la raíz del proyecto (en la misma carpeta donde está el `docker-compose.yml`). Tienes una plantilla en `.env.example`:
 
-### 2. Crear la base de datos en MySQL
-
-Accede a tu cliente MySQL y ejecuta:
-
-```sql
-CREATE DATABASE cafe_con_huellas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
-> ℹ️ Solo es necesario crear la base de datos. Las tablas se generan
-> automáticamente al arrancar la aplicación gracias a Hibernate (`ddl-auto=update`).
-
----
-
-### 3. Configurar las variables de entorno
-
-El proyecto requiere las siguientes variables. Puedes definirlas en tu IDE (IntelliJ → Run/Edit Configurations → Environment Variables) o crear el archivo que se indica abajo.
-
-| Variable | Descripción | Ejemplo |
-|---|---|---|
-| `DB_URL` | URL JDBC de tu base de datos | `jdbc:mysql://localhost:3306/cafe_con_huellas` |
-| `DB_USERNAME` | Usuario de MySQL | `root` |
-| `DB_PASSWORD` | Contraseña de MySQL | `tu_password` |
-| `JWT_SECRET` | Clave secreta para firmar tokens JWT (mín. 32 chars) | `mi_clave_super_secreta_2024_jwt` |
-| `JWT_EXPIRATION` | Duración del token en milisegundos | `86400000` (= 24h) |
-| `MAIL_USERNAME` | Tu correo Gmail | `tucorreo@gmail.com` |
-| `MAIL_PASSWORD` | Contraseña de aplicación de Gmail | `xxxx xxxx xxxx xxxx` |
-| `ADMIN_EMAIL` | Email del administrador del refugio | `admin@cafeconhuellas.com` |
-| `FRONTEND_URL` | URL del frontend (para los links en los correos) | `http://localhost:4200` |
-
-#### Opción rápida: archivo `application-local.properties`
-
-Crea el archivo `src/main/resources/application-local.properties` (está en `.gitignore`, nunca se sube al repositorio):
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/cafe_con_huellas
-spring.datasource.username=root
-spring.datasource.password=tu_password
-
-app.jwt.secret=mi_clave_super_secreta_para_jwt_2024
-app.jwt.expiration=86400000
-
-spring.mail.username=tucorreo@gmail.com
-spring.mail.password=xxxx xxxx xxxx xxxx
-
-app.admin.email=admin@cafeconhuellas.com
-app.frontend.url=http://localhost:4200
+DB_USERNAME=cafe_user
+DB_PASSWORD=tu_password_segura
+MAIL_USERNAME=tucorreo@gmail.com
+MAIL_PASSWORD=xxxx xxxx xxxx xxxx
+JWT_SECRET=tu_clave_secreta_jwt_minimo_32_caracteres
+FRONTEND_URL=http://localhost:4200
 ```
 
----
+| Variable | Descripción |
+|---|---|
+| `DB_USERNAME` | Usuario de la base de datos (cualquier nombre, no usar `root`) |
+| `DB_PASSWORD` | Contraseña de la base de datos |
+| `MAIL_USERNAME` | Correo Gmail desde el que se envían los emails |
+| `MAIL_PASSWORD` | Contraseña de aplicación de Gmail (no la contraseña normal de la cuenta) |
+| `JWT_SECRET` | Clave secreta para firmar los tokens JWT (mínimo 32 caracteres) |
+| `FRONTEND_URL` | URL del frontend para construir los enlaces en los correos |
 
-### 4. Ejecutar la aplicación
+> ⚠️ El archivo `.env` está en `.gitignore` y **nunca se sube al repositorio** para proteger las credenciales.
 
-#### Con Maven Wrapper (recomendado, no necesita Maven instalado):
+### 3. Levantar el proyecto
+
+**Primera vez** (descarga imágenes y compila el proyecto, tarda unos minutos):
 
 ```bash
-# Linux/Mac
-./mvnw spring-boot:run
-
-# Windows
-mvnw.cmd spring-boot:run
+docker compose up --build
 ```
 
-#### Con perfil local (si creaste `application-local.properties`):
+**Siguientes veces** (arranca directamente sin recompilar, mucho más rápido):
 
 ```bash
-./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+docker compose up
 ```
 
-La API arrancará en: **http://localhost:8080**
+> Usa `--build` de nuevo solo si has hecho cambios en el código Java o en el `pom.xml`.
 
+Docker levantará dos contenedores:
+- `cafe_con_huellas_db` → base de datos MySQL en el puerto 3307
+- `cafe_con_huellas_backend` → servidor Spring Boot en el puerto 8087
+
+Liquibase creará automáticamente todas las tablas de la base de datos al arrancar.
+
+Cuando veas esta línea en los logs, el servidor está listo:
+
+```
+Started CafeConHuellasApplication in X seconds
+```
+
+La API estará disponible en: **http://localhost:8087**
+
+### 4. Parar el proyecto
+
+Para parar los contenedores conservando los datos de la base de datos:
+
+```bash
+docker compose down
+```
+
+Para parar y **borrar también los datos** (útil para empezar desde cero):
+
+```bash
+docker compose down -v
+```
+
+### 5. Ver los logs
+
+Si algo falla al arrancar, puedes ver los logs detallados con:
+
+```bash
+docker compose logs backend
+```
+
+### ⚠️ Posibles problemas al arrancar
+
+**El puerto 3307 ya está en uso**
+
+Ocurre si tienes MySQL instalado localmente y arrancado. Solución: para el servicio MySQL local antes de levantar Docker.
+
+```bash
+# Windows (PowerShell como administrador)
+Stop-Service -Name "MySQL*" -Force
+```
+
+**El puerto 8087 ya está en uso**
+
+Otro proceso está usando ese puerto. Ciérralo o cambia el puerto en `docker-compose.yml`.
+
+---
+
+## 🗃️ Gestión de la base de datos con Liquibase
+
+El proyecto usa **Liquibase** para gestionar la estructura de la base de datos. En lugar de crear las tablas a mano, Liquibase las crea automáticamente al arrancar la aplicación ejecutando los changesets definidos en `src/main/resources/db/changelog/`.
+
+### ¿Cuándo necesito hacer algo?
+
+**Normalmente nada.** Al hacer `docker compose up` por primera vez, Liquibase crea todas las tablas solo.
+
+**Solo si añades o modificas algo en las entidades** (nuevo campo, nueva tabla, etc.) sigue estos pasos:
+
+1. Asegúrate de tener la base de datos local levantada con Docker:
+```bash
+docker compose up
+```
+
+2. Genera el changeset con los cambios detectados:
+```bash
+./mvnw liquibase:diff
+```
+
+3. Revisa el changeset generado en `src/main/resources/db/changelog/` y asegúrate de que es correcto
+4. Añádelo al archivo `db.changelog-master.xml`
+5. Recrea la base de datos para que Liquibase aplique los cambios:
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+> ⚠️ El flag `-v` borra todos los datos existentes. Úsalo solo en desarrollo, nunca en producción.
 ---
 
 ## 📚 Documentación de la API (Swagger)
 
-Una vez levantada la aplicación, accede a la documentación interactiva:
+Con el proyecto en marcha, accede a la documentación interactiva:
 
 ```
-http://localhost:8080/swagger-ui/index.html
+http://localhost:8087/swagger-ui/index.html
 ```
 
-Desde ahí puedes explorar y probar todos los endpoints. Para los protegidos, primero haz login y pega el token con el botón **Authorize 🔒**.
+Desde ahí puedes explorar y probar todos los endpoints. Para los endpoints protegidos:
+
+1. Haz login en `POST /api/auth/login`
+2. Copia el token que devuelve
+3. Pulsa el botón **Authorize 🔒** arriba a la derecha
+4. Pega el token con el formato: `Bearer <token>`
 
 ---
 
@@ -237,13 +241,29 @@ La API usa **JWT Bearer Token**. El flujo es:
 
 ---
 
-## 🧪 Ejecutar los tests
+## 🗂️ Modelo de datos
 
-```bash
-./mvnw test
-```
+### Entidades principales
 
-Los tests usan una base de datos **H2 en memoria**, por lo que no necesitan MySQL ni variables de entorno. Se ejecutan de forma completamente aislada.
+| Entidad | Descripción |
+|---|---|
+| `User` | Usuarios del sistema (adoptantes y administradores). Tiene rol ADMIN o USER. |
+| `Pet` | Mascotas del refugio con toda su información (raza, edad, peso, categoría...). |
+| `Vaccine` | Catálogo de vacunas disponibles (datos maestros). |
+| `Event` | Eventos organizados por el refugio (jornadas, mercadillos, charlas...). |
+| `Donation` | Donaciones registradas en el sistema. |
+
+### Entidades de relación
+
+| Entidad | Descripción |
+|---|---|
+| `PetImage` | Fotos adicionales de una mascota. Relación **N:1** con `Pet`. |
+| `PetVaccine` | Registro de vacunas aplicadas a una mascota con fecha. |
+| `UserPetRelationship` | Vínculo formal entre un usuario y una mascota (adopción, acogida...). |
+| `UserPetFavorite` | Lista de mascotas marcadas como favoritas por un usuario. |
+| `AdoptionFormToken` | Token único y temporal (48h) para acceder al formulario de adopción. |
+| `AdoptionRequest` | Formulario rellenado por el usuario con sus datos. |
+| `AdoptionDetail` | Detalles registrados por el admin tras formalizar la adopción. |
 
 ---
 
@@ -263,22 +283,31 @@ src/
 │   │   ├── security/        # JwtService, JwtAuthFilter
 │   │   └── service/         # Lógica de negocio
 │   └── resources/
-│       └── application.properties
+│       ├── application.properties
+│       ├── application-prod.properties
+│       └── db/changelog/    # Migraciones Liquibase
 └── test/
-    ├── java/                # Tests unitarios e integración
-    └── resources/
-        └── application.properties  # Configuración H2 para tests
+    └── java/                # Tests unitarios e integración
 ```
 
 ---
-## 📚 Documentación
 
-La documentación técnica del proyecto ha sido generada con **Javadoc** y cubre todas las capas de la aplicación: controladores, servicios, repositorios, entidades, DTOs, mappers, seguridad y configuración.
+## 🧪 Ejecutar los tests
 
-Para consultarla localmente:
+```bash
+./mvnw test
+```
 
-1. Clona el repositorio
-2. Abre el archivo `docs/javadoc/index.html` en tu navegador
+Los tests usan una base de datos **H2 en memoria**, por lo que no necesitan Docker ni variables de entorno. Se ejecutan de forma completamente aislada.
+
+---
+
+## 📚 Documentación Javadoc
+
+La documentación técnica está generada con **Javadoc** y cubre todas las capas de la aplicación.
+
+Para consultarla localmente abre el archivo `docs/javadoc/index.html` en tu navegador.
+
 ---
 
 ## 👩‍💻 Autoras
