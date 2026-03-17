@@ -113,14 +113,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
-        <!-- Flyway: gestión de migraciones de base de datos -->
+        <!-- Liquibase: gestión de migraciones de base de datos -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-mysql</artifactId>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
         </dependency>
     </dependencies>
 
@@ -155,6 +151,30 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Plugin de Liquibase para generar changesets automáticamente -->
+            <plugin>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-maven-plugin</artifactId>
+                <version>4.29.2</version>
+                <configuration>
+                    <!-- Dónde está tu archivo maestro de Liquibase -->
+                    <changeLogFile>src/main/resources/db/changelog/db.changelog-master.xml</changeLogFile>
+                    <!-- Conexión a la base de datos -->
+                    <url>jdbc:mysql://localhost:3307/animal_shelter_db?createDatabaseIfNotExist=true</url>
+                    <username>${DB_USERNAME}</username>
+                    <password>${DB_PASSWORD}</password>
+                    <driver>com.mysql.cj.jdbc.Driver</driver>
+                    <!-- Dónde se guardarán los changesets generados automáticamente -->
+                    <outputChangeLogFile>src/main/resources/db/changelog/db.changelog-master.xml</outputChangeLogFile>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.mysql</groupId>
+                        <artifactId>mysql-connector-j</artifactId>
+                        <version>9.1.0</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

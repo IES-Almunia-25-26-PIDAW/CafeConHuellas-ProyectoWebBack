@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- ============================================================ -->
+    <!-- Changeset 1: Crear tabla User                                -->
+    <!-- ============================================================ -->
+    <changeSet id="1" author="ana">
+        <createTable tableName="User">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name_1" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name_2" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone" type="VARCHAR(255)"/>
+            <column name="role" type="ENUM('ADMIN', 'USER')">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 2: Crear tabla Pet                                 -->
+    <!-- ============================================================ -->
+    <changeSet id="2" author="ana">
+        <createTable tableName="Pet">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="breed" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="ENUM('GATO', 'PERRO')">
+                <constraints nullable="false"/>
+            </column>
+            <column name="age" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="weight" type="DECIMAL(19, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="neutered" type="TINYINT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_ppp" type="TINYINT(1)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 3: Crear tabla Pet_Image                           -->
+    <!-- ============================================================ -->
+    <changeSet id="3" author="ana">
+        <createTable tableName="Pet_Image">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="pet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="Pet_Image"
+                baseColumnNames="pet_id"
+                referencedTableName="Pet"
+                referencedColumnNames="id"
+                constraintName="fk_pet_image_pet"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 4: Crear tabla Vaccine                             -->
+    <!-- ============================================================ -->
+    <changeSet id="4" author="ana">
+        <createTable tableName="Vaccine">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+        </createTable>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 5: Crear tabla Pet_Vaccine                         -->
+    <!-- ============================================================ -->
+    <changeSet id="5" author="ana">
+        <createTable tableName="Pet_Vaccine">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="pet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vaccine_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_administered" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="next_dose_date" type="DATE"/>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="Pet_Vaccine"
+                baseColumnNames="pet_id"
+                referencedTableName="Pet"
+                referencedColumnNames="id"
+                constraintName="fk_pet_vaccine_pet"/>
+        <addForeignKeyConstraint
+                baseTableName="Pet_Vaccine"
+                baseColumnNames="vaccine_id"
+                referencedTableName="Vaccine"
+                referencedColumnNames="id"
+                constraintName="fk_pet_vaccine_vaccine"/>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 6: Crear tabla User_Pet_Favorites                  -->
+    <!-- ============================================================ -->
+    <changeSet id="6" author="ana">
+        <createTable tableName="User_Pet_Favorites">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="User_Pet_Favorites"
+                baseColumnNames="user_id"
+                referencedTableName="User"
+                referencedColumnNames="id"
+                constraintName="fk_favorites_user"/>
+        <addForeignKeyConstraint
+                baseTableName="User_Pet_Favorites"
+                baseColumnNames="pet_id"
+                referencedTableName="Pet"
+                referencedColumnNames="id"
+                constraintName="fk_favorites_pet"/>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 7: Crear tabla User_Pet_Relationship               -->
+    <!-- ============================================================ -->
+    <changeSet id="7" author="ana">
+        <createTable tableName="User_Pet_Relationship">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="relationship_type" type="ENUM('ADOPCION', 'ACOGIDA', 'PASEO', 'VOLUNTARIADO')">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="DATE"/>
+            <column name="active" type="TINYINT(1)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="User_Pet_Relationship"
+                baseColumnNames="user_id"
+                referencedTableName="User"
+                referencedColumnNames="id"
+                constraintName="fk_relationship_user"/>
+        <addForeignKeyConstraint
+                baseTableName="User_Pet_Relationship"
+                baseColumnNames="pet_id"
+                referencedTableName="Pet"
+                referencedColumnNames="id"
+                constraintName="fk_relationship_pet"/>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 8: Crear tabla Adoption_Detail                     -->
+    <!-- ============================================================ -->
+    <changeSet id="8" author="ana">
+        <createTable tableName="Adoption_Detail">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_pet_relationship_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="adoption_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="place" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="conditions" type="TEXT"/>
+            <column name="issues" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="Adoption_Detail"
+                baseColumnNames="user_pet_relationship_id"
+                referencedTableName="User_Pet_Relationship"
+                referencedColumnNames="id"
+                constraintName="fk_adoption_detail_relationship"/>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 9: Crear tabla Adoption_Form_Token                 -->
+    <!-- ============================================================ -->
+    <changeSet id="9" author="ana">
+        <createTable tableName="Adoption_Form_Token">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="token" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="used" type="TINYINT(1)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="Adoption_Form_Token"
+                baseColumnNames="user_id"
+                referencedTableName="User"
+                referencedColumnNames="id"
+                constraintName="fk_token_user"/>
+        <addForeignKeyConstraint
+                baseTableName="Adoption_Form_Token"
+                baseColumnNames="pet_id"
+                referencedTableName="Pet"
+                referencedColumnNames="id"
+                constraintName="fk_token_pet"/>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 10: Crear tabla Adoption_Request                   -->
+    <!-- ============================================================ -->
+    <changeSet id="10" author="ana">
+        <createTable tableName="Adoption_Request">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="adoption_form_token_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="address" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="city" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="housing_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="has_garden" type="TINYINT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="has_other_pets" type="TINYINT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="has_children" type="TINYINT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hours_alone_per_day" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="experience_with_pets" type="TINYINT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason_for_adoption" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="agrees_to_follow_up" type="TINYINT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="additional_info" type="TEXT"/>
+            <column name="status" type="ENUM('PENDIENTE', 'APROBADA', 'DENEGADA')">
+                <constraints nullable="false"/>
+            </column>
+            <column name="submitted_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="Adoption_Request"
+                baseColumnNames="adoption_form_token_id"
+                referencedTableName="Adoption_Form_Token"
+                referencedColumnNames="id"
+                constraintName="fk_adoption_request_token"/>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 11: Crear tabla Donation                           -->
+    <!-- ============================================================ -->
+    <changeSet id="11" author="ana">
+        <createTable tableName="Donation">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+            <column name="date" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="ENUM('MONETARIA','ALIMENTACION','MATERIAL','JUGUETES','MEDICAMENTOS','SUSCRIPCION','OTROS')">
+                <constraints nullable="false"/>
+            </column>
+            <column name="method" type="ENUM('EFECTIVO','TRANSFERENCIA','TARJETA','BIZUM','ESPECIE')">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(19, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="Donation"
+                baseColumnNames="user_id"
+                referencedTableName="User"
+                referencedColumnNames="id"
+                constraintName="fk_donation_user"/>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 12: Crear tabla Event                              -->
+    <!-- ============================================================ -->
+    <changeSet id="12" author="ana">
+        <createTable tableName="Event">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_date" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="VARCHAR(255)"/>
+            <column name="event_type" type="ENUM('ADOPCION','MERCADILLO','EDUCACION','RECAUDACION','OTRO')">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="ENUM('PROGRAMADO','EN_CURSO','FINALIZADO','CANCELADO')">
+                <constraints nullable="false"/>
+            </column>
+            <column name="max_capacity" type="INT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>
