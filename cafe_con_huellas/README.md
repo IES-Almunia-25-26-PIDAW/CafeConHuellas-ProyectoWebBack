@@ -174,6 +174,24 @@ Otro proceso está usando ese puerto. Ciérralo o cambia el puerto en `docker-co
 
 ---
 
+## 🐾 Datos de prueba
+
+Al arrancar el proyecto por primera vez con Docker, Liquibase insertará
+automáticamente datos de prueba en la base de datos.
+
+### Credenciales de acceso
+
+| Rol   | Email                    | Contraseña  |
+|-------|--------------------------|-------------|
+| ADMIN | admin@cafehuellas.com    | Admin1234!  |
+| USER  | maria@example.com        | User1234!   |
+
+### Datos incluidos
+- 8 mascotas (5 perros y 3 gatos)
+- 6 eventos (4 programados, 2 finalizados)
+
+---
+
 ## 🗃️ Gestión de la base de datos con Liquibase
 
 El proyecto usa **Liquibase** para gestionar la estructura de la base de datos. En lugar de crear las tablas a mano, Liquibase las crea automáticamente al arrancar la aplicación ejecutando los changesets definidos en `src/main/resources/db/changelog/`.

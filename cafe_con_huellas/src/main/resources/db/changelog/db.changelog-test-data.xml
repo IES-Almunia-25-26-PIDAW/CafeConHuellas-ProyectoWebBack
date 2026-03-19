@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- ============================================================ -->
+    <!-- Changeset 13: Datos de prueba - Usuarios                     -->
+    <!-- ============================================================ -->
+    <changeSet id="13" author="ana">
+        <insert tableName="User">
+            <column name="first_name" value="Ana"/>
+            <column name="last_name_1" value="García"/>
+            <column name="last_name_2" value="López"/>
+            <column name="email" value="admin@cafehuellas.com"/>
+            <!-- BCrypt de: Admin1234! -->
+            <column name="password" value="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh/y"/>
+            <column name="phone" value="600111222"/>
+            <column name="role" value="ADMIN"/>
+            <column name="image_url" value="https://randomuser.me/api/portraits/women/44.jpg"/>
+        </insert>
+        <insert tableName="User">
+            <column name="first_name" value="María"/>
+            <column name="last_name_1" value="Martínez"/>
+            <column name="last_name_2" value="Ruiz"/>
+            <column name="email" value="maria@example.com"/>
+            <!-- BCrypt de: User1234! -->
+            <column name="password" value="$2a$10$TbobmmkWJuXEqRyXcjGcOOgbMfBuSBWEgzP3i7/nFHmL1z1RKTqMa"/>
+            <column name="phone" value="600333444"/>
+            <column name="role" value="USER"/>
+            <column name="image_url" value="https://randomuser.me/api/portraits/women/68.jpg"/>
+        </insert>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 14: Datos de prueba - Mascotas                     -->
+    <!-- ============================================================ -->
+    <changeSet id="14" author="ana">
+        <insert tableName="Pet">
+            <column name="name" value="Luna"/>
+            <column name="description" value="Luna es una perra muy cariñosa y juguetona que adora a los niños. Llegó al refugio tras ser abandonada en la carretera. Se lleva bien con otros perros y le encanta correr en espacios abiertos."/>
+            <column name="breed" value="Mestiza"/>
+            <column name="category" value="PERRO"/>
+            <column name="age" valueNumeric="3"/>
+            <column name="weight" valueNumeric="18.50"/>
+            <column name="neutered" valueNumeric="1"/>
+            <column name="is_ppp" valueNumeric="0"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600"/>
+        </insert>
+        <insert tableName="Pet">
+            <column name="name" value="Max"/>
+            <column name="description" value="Max es un perro tranquilo y fiel. Perfecto para familias que buscan un compañero leal. Le gusta el sofá y los paseos cortos por el parque. Necesita un hogar sin otros animales."/>
+            <column name="breed" value="Labrador Retriever"/>
+            <column name="category" value="PERRO"/>
+            <column name="age" valueNumeric="5"/>
+            <column name="weight" valueNumeric="30.00"/>
+            <column name="neutered" valueNumeric="1"/>
+            <column name="is_ppp" valueNumeric="0"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600"/>
+        </insert>
+        <insert tableName="Pet">
+            <column name="name" value="Rocky"/>
+            <column name="description" value="Rocky es enérgico y necesita ejercicio diario. Es muy inteligente y ha aprendido varios trucos. Convive bien con perros grandes. Requiere dueño con experiencia en la raza."/>
+            <column name="breed" value="American Staffordshire Terrier"/>
+            <column name="category" value="PERRO"/>
+            <column name="age" valueNumeric="2"/>
+            <column name="weight" valueNumeric="22.00"/>
+            <column name="neutered" valueNumeric="1"/>
+            <column name="is_ppp" valueNumeric="1"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1588943211346-0908a1fb0b01?w=600"/>
+        </insert>
+        <insert tableName="Pet">
+            <column name="name" value="Coco"/>
+            <column name="description" value="Coco es una perrita pequeña y muy sociable. Se adapta perfectamente a pisos pequeños y es ideal para personas mayores o familias con niños. Le encanta dormir en el regazo."/>
+            <column name="breed" value="Chihuahua"/>
+            <column name="category" value="PERRO"/>
+            <column name="age" valueNumeric="4"/>
+            <column name="weight" valueNumeric="3.20"/>
+            <column name="neutered" valueNumeric="1"/>
+            <column name="is_ppp" valueNumeric="0"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1534361960057-19f4434c8c83?w=600"/>
+        </insert>
+        <insert tableName="Pet">
+            <column name="name" value="Bruno"/>
+            <column name="description" value="Bruno llegó al refugio de cachorro y ya es toda una estrella. Es muy obediente y ha pasado por clases de adiestramiento básico. Perfecto para familias activas con jardín."/>
+            <column name="breed" value="Pastor Alemán"/>
+            <column name="category" value="PERRO"/>
+            <column name="age" valueNumeric="1"/>
+            <column name="weight" valueNumeric="28.00"/>
+            <column name="neutered" valueNumeric="0"/>
+            <column name="is_ppp" valueNumeric="0"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=600"/>
+        </insert>
+        <insert tableName="Pet">
+            <column name="name" value="Misi"/>
+            <column name="description" value="Misi es una gatita muy independiente pero cariñosa cuando quiere. Le encanta asomarse a la ventana y observar los pájaros. Perfecta para personas que trabajan fuera de casa."/>
+            <column name="breed" value="Europeo Común"/>
+            <column name="category" value="GATO"/>
+            <column name="age" valueNumeric="6"/>
+            <column name="weight" valueNumeric="4.10"/>
+            <column name="neutered" valueNumeric="1"/>
+            <column name="is_ppp" valueNumeric="0"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600"/>
+        </insert>
+        <insert tableName="Pet">
+            <column name="name" value="Oliver"/>
+            <column name="description" value="Oliver es un gato juguetón y muy curioso. Se lleva bien con otros gatos y con perros tranquilos. Le encanta explorar y necesita un entorno enriquecido con juguetes y rascadores."/>
+            <column name="breed" value="Siamés"/>
+            <column name="category" value="GATO"/>
+            <column name="age" valueNumeric="2"/>
+            <column name="weight" valueNumeric="3.80"/>
+            <column name="neutered" valueNumeric="1"/>
+            <column name="is_ppp" valueNumeric="0"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600"/>
+        </insert>
+        <insert tableName="Pet">
+            <column name="name" value="Nala"/>
+            <column name="description" value="Nala es una gatita muy tímida al principio, pero una vez que coge confianza es un amor. Necesita un hogar tranquilo y paciente. Es ideal para personas adultas sin niños pequeños."/>
+            <column name="breed" value="Maine Coon"/>
+            <column name="category" value="GATO"/>
+            <column name="age" valueNumeric="3"/>
+            <column name="weight" valueNumeric="5.50"/>
+            <column name="neutered" valueNumeric="1"/>
+            <column name="is_ppp" valueNumeric="0"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1533743983669-94fa5c4338ec?w=600"/>
+        </insert>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 15: Datos de prueba - Imágenes galería             -->
+    <!-- ============================================================ -->
+    <changeSet id="15" author="ana">
+        <!-- Luna (id=1) -->
+        <insert tableName="Pet_Image">
+            <column name="pet_id" valueNumeric="1"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600"/>
+        </insert>
+        <insert tableName="Pet_Image">
+            <column name="pet_id" valueNumeric="1"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=600"/>
+        </insert>
+        <!-- Max (id=2) -->
+        <insert tableName="Pet_Image">
+            <column name="pet_id" valueNumeric="2"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1552053831-71594a27632d?w=600"/>
+        </insert>
+        <!-- Misi (id=6) -->
+        <insert tableName="Pet_Image">
+            <column name="pet_id" valueNumeric="6"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=600"/>
+        </insert>
+        <insert tableName="Pet_Image">
+            <column name="pet_id" valueNumeric="6"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1501820488136-72669149e0d4?w=600"/>
+        </insert>
+        <!-- Oliver (id=7) -->
+        <insert tableName="Pet_Image">
+            <column name="pet_id" valueNumeric="7"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600"/>
+        </insert>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 16: Datos de prueba - Eventos                      -->
+    <!-- ============================================================ -->
+    <changeSet id="16" author="ana">
+        <insert tableName="Event">
+            <column name="name" value="Jornada de Adopción Primavera 2026"/>
+            <column name="description" value="Ven a conocer a nuestros animales y encuentra a tu compañero ideal. Habrá zonas de juego, información sobre el proceso de adopción y regalos para los nuevos adoptantes. Familias y niños bienvenidos."/>
+            <column name="event_date" valueDate="2026-04-12T10:00:00"/>
+            <column name="location" value="Parque de María Luisa, Sevilla"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800"/>
+            <column name="event_type" value="ADOPCION"/>
+            <column name="status" value="PROGRAMADO"/>
+            <column name="max_capacity" valueNumeric="200"/>
+        </insert>
+        <insert tableName="Event">
+            <column name="name" value="Mercadillo Solidario de Primavera"/>
+            <column name="description" value="Mercadillo benéfico con productos artesanales, segunda mano y comida casera. Todos los beneficios se destinan a la alimentación y atención veterinaria de los animales del refugio."/>
+            <column name="event_date" valueDate="2026-05-03T09:30:00"/>
+            <column name="location" value="Plaza de la Encarnación, Sevilla"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800"/>
+            <column name="event_type" value="MERCADILLO"/>
+            <column name="status" value="PROGRAMADO"/>
+            <column name="max_capacity" valueNumeric="500"/>
+        </insert>
+        <insert tableName="Event">
+            <column name="name" value="Taller de Educación Animal para Niños"/>
+            <column name="description" value="Taller educativo para que los más pequeños aprendan a respetar y cuidar a los animales. Actividades interactivas, cuentos y visita guiada al refugio. Plazas limitadas."/>
+            <column name="event_date" valueDate="2026-04-25T16:00:00"/>
+            <column name="location" value="Sede del Refugio Café con Huellas, Sevilla"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1503676382389-4809596d5290?w=800"/>
+            <column name="event_type" value="EDUCACION"/>
+            <column name="status" value="PROGRAMADO"/>
+            <column name="max_capacity" valueNumeric="30"/>
+        </insert>
+        <insert tableName="Event">
+            <column name="name" value="Carrera Solidaria Huellas y Pasos"/>
+            <column name="description" value="Carrera popular de 5km para recaudar fondos para el refugio. Pueden participar personas y sus mascotas. Premio para el tándem más divertido. Inscripción gratuita."/>
+            <column name="event_date" valueDate="2026-06-15T08:00:00"/>
+            <column name="location" value="Alameda de Hércules, Sevilla"/>
+            <column name="image_url" value="https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=800"/>
+            <column name="event_type" value="RECAUDACION"/>
+            <column name="status" value="PROGRAMADO"/>
+            <column name="max_capacity" valueNumeric="1000"/>
+        </insert>
+        <insert tableName="Event">
+            <column name="name" value="Jornada de Adopción Navidad 2025"/>
+            <column name="description" value="Evento navideño de adopciones con decoración especial, castañas asadas y actuaciones musicales. Muchas mascotas encontraron hogar en esta edición. Un éxito rotundo."/>
+            <column name="event_date" valueDate="2025-12-20T10:00:00"/>
+            <column name="location" value="Parque de los Príncipes, Sevilla"/>
+            <column name="event_type" value="ADOPCION"/>
+            <column name="status" value="FINALIZADO"/>
+            <column name="max_capacity" valueNumeric="150"/>
+        </insert>
+        <insert tableName="Event">
+            <column name="name" value="Charla sobre Tenencia Responsable"/>
+            <column name="description" value="Conferencia a cargo de veterinarios y educadores caninos sobre la tenencia responsable de mascotas, bienestar animal y prevención del abandono en nuestra ciudad."/>
+            <column name="event_date" valueDate="2026-03-15T18:00:00"/>
+            <column name="location" value="Centro Cívico Norte, Sevilla"/>
+            <column name="event_type" value="EDUCACION"/>
+            <column name="status" value="FINALIZADO"/>
+            <column name="max_capacity" valueNumeric="80"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

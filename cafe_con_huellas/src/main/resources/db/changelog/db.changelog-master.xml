@@ -403,4 +403,6 @@
         </createTable>
     </changeSet>
 
+    <include file="db/changelog/db.changelog-test-data.xml"/>
+
 </databaseChangeLog>
