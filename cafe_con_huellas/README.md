@@ -190,6 +190,26 @@ automáticamente datos de prueba en la base de datos.
 - 8 mascotas (5 perros y 3 gatos)
 - 6 eventos (4 programados, 2 finalizados)
 
+### Cómo obtener el token para probar la API
+
+Los endpoints protegidos requieren un token JWT. Para obtenerlo con los usuarios de prueba:
+
+1. Abre Swagger en `http://localhost:8087/swagger-ui/index.html`
+2. Localiza el endpoint `POST /api/auth/login` y haz clic en **Try it out**
+3. Introduce las credenciales en el body:
+```json
+{
+  "email": "admin@cafehuellas.com",
+  "password": "Admin1234!"
+}
+```
+4. Pulsa **Execute** y copia el valor del campo `token` de la respuesta
+5. Haz clic en el botón **Authorize 🔒** arriba a la derecha en Swagger
+6. Pega el token directamente en el campo y pulsa **Authorize**
+
+A partir de ese momento todos los endpoints protegidos funcionarán con ese usuario durante la sesión de Swagger.
+
+> Repite el proceso con `maria@example.com` / `User1234!` para probar endpoints con rol USER.
 ---
 
 ## 🗃️ Gestión de la base de datos con Liquibase

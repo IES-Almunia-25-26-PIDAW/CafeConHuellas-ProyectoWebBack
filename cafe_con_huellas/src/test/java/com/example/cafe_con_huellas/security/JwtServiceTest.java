@@ -17,22 +17,23 @@ class JwtServiceTest {
     @Autowired
     private JwtService jwtService;
 
-    // Email de prueba que usaremos en todos los tests
     private String testEmail;
+    private String testRole;
 
     // Se ejecuta antes de cada test para inicializar los datos de prueba
     @BeforeEach
     void setUp() {
         testEmail = "test@cafeconhuellas.com";
+        testRole  = "USER";
     }
 
-    @Test
-    @DisplayName("Debe generar un token JWT no vacío para un email válido")
-    void shouldGenerateToken() {
-        // Generamos el token
-        String token = jwtService.generateToken(testEmail);
+    // -------------------- ACCESS TOKEN --------------------
 
-        // Verificamos que el token no es nulo ni vacío
+    @Test
+    @DisplayName("Debe generar un access token JWT no vacío para email y rol válidos")
+    void shouldGenerateAccessToken() {
+        String token = jwtService.generateToken(testEmail, testRole);
+
         assertThat(token).isNotNull();
         assertThat(token).isNotEmpty();
         // Un token JWT siempre tiene 3 partes separadas por puntos
@@ -40,51 +41,94 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("Debe extraer correctamente el email del token generado")
-    void shouldExtractEmailFromToken() {
-        // Generamos un token con nuestro email de prueba
-        String token = jwtService.generateToken(testEmail);
+    @DisplayName("Debe extraer correctamente el email del access token generado")
+    void shouldExtractEmailFromAccessToken() {
+        String token = jwtService.generateToken(testEmail, testRole);
 
-        // Extraemos el email del token
         String extractedEmail = jwtService.extractEmail(token);
 
-        // Verificamos que el email extraído coincide con el original
         assertThat(extractedEmail).isEqualTo(testEmail);
     }
 
     @Test
-    @DisplayName("Debe validar correctamente un token válido para el email correcto")
-    void shouldValidateTokenForCorrectEmail() {
-        // Generamos el token
-        String token = jwtService.generateToken(testEmail);
+    @DisplayName("Debe extraer correctamente el rol del access token generado")
+    void shouldExtractRoleFromAccessToken() {
+        String token = jwtService.generateToken(testEmail, testRole);
 
-        // Verificamos que el token es válido para ese email
+        String extractedRole = jwtService.extractRole(token);
+
+        assertThat(extractedRole).isEqualTo(testRole);
+    }
+
+    @Test
+    @DisplayName("Debe validar correctamente un access token válido para el email correcto")
+    void shouldValidateAccessTokenForCorrectEmail() {
+        String token = jwtService.generateToken(testEmail, testRole);
+
         boolean isValid = jwtService.isTokenValid(token, testEmail);
 
         assertThat(isValid).isTrue();
     }
 
     @Test
-    @DisplayName("Debe rechazar un token usado con un email diferente")
-    void shouldRejectTokenForWrongEmail() {
-        // Generamos token para un email
-        String token = jwtService.generateToken(testEmail);
+    @DisplayName("Debe rechazar un access token usado con un email diferente")
+    void shouldRejectAccessTokenForWrongEmail() {
+        String token = jwtService.generateToken(testEmail, testRole);
 
-        // Intentamos validarlo con un email diferente
-        boolean isValid = jwtService.isTokenValid(token, "otro@email.com");
+        boolean isValid = jwtService.isTokenValid(token, "otro@test.com");
 
-        // Debe ser inválido porque el email no coincide
         assertThat(isValid).isFalse();
     }
 
-    @Test
-    @DisplayName("Debe generar tokens diferentes para emails diferentes")
-    void shouldGenerateDifferentTokensForDifferentEmails() {
-        // Generamos tokens para dos emails distintos
-        String token1 = jwtService.generateToken(testEmail);
-        String token2 = jwtService.generateToken("otro@email.com");
+    // -------------------- REFRESH TOKEN --------------------
 
-        // Los tokens deben ser diferentes
-        assertThat(token1).isNotEqualTo(token2);
+    @Test
+    @DisplayName("Debe generar un refresh token JWT no vacío para un email válido")
+    void shouldGenerateRefreshToken() {
+        String refreshToken = jwtService.generateRefreshToken(testEmail);
+
+        assertThat(refreshToken).isNotNull();
+        assertThat(refreshToken).isNotEmpty();
+        assertThat(refreshToken.split("\\.")).hasSize(3);
+    }
+
+    @Test
+    @DisplayName("Debe extraer correctamente el email del refresh token generado")
+    void shouldExtractEmailFromRefreshToken() {
+        String refreshToken = jwtService.generateRefreshToken(testEmail);
+
+        String extractedEmail = jwtService.extractEmail(refreshToken);
+
+        assertThat(extractedEmail).isEqualTo(testEmail);
+    }
+
+    @Test
+    @DisplayName("El refresh token no debe contener rol")
+    void shouldNotContainRoleInRefreshToken() {
+        String refreshToken = jwtService.generateRefreshToken(testEmail);
+
+        // El refresh token no lleva rol, debe devolver null
+        String extractedRole = jwtService.extractRole(refreshToken);
+
+        assertThat(extractedRole).isNull();
+    }
+
+    @Test
+    @DisplayName("Debe validar correctamente un refresh token válido para el email correcto")
+    void shouldValidateRefreshTokenForCorrectEmail() {
+        String refreshToken = jwtService.generateRefreshToken(testEmail);
+
+        boolean isValid = jwtService.isTokenValid(refreshToken, testEmail);
+
+        assertThat(isValid).isTrue();
+    }
+
+    @Test
+    @DisplayName("Access token y refresh token deben ser distintos entre sí")
+    void accessTokenAndRefreshTokenShouldBeDifferent() {
+        String accessToken  = jwtService.generateToken(testEmail, testRole);
+        String refreshToken = jwtService.generateRefreshToken(testEmail);
+
+        assertThat(accessToken).isNotEqualTo(refreshToken);
     }
 }

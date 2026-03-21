@@ -15,7 +15,7 @@
             <column name="last_name_2" value="López"/>
             <column name="email" value="admin@cafehuellas.com"/>
             <!-- BCrypt de: Admin1234! -->
-            <column name="password" value="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh/y"/>
+            <column name="password" value="$2a$12$5h1MRKICS33iLK5XkRoIpeaABqfOpC1eW1Wern3boA7yUfpRXgQ1m"/>
             <column name="phone" value="600111222"/>
             <column name="role" value="ADMIN"/>
             <column name="image_url" value="https://randomuser.me/api/portraits/women/44.jpg"/>
@@ -26,7 +26,7 @@
             <column name="last_name_2" value="Ruiz"/>
             <column name="email" value="maria@example.com"/>
             <!-- BCrypt de: User1234! -->
-            <column name="password" value="$2a$10$TbobmmkWJuXEqRyXcjGcOOgbMfBuSBWEgzP3i7/nFHmL1z1RKTqMa"/>
+            <column name="password" value="$2a$12$XGph8DzSAU2S2PRb8l4hj.nBsr3aBKTSrQj7vPXE2bZzMA/nag.OO"/>
             <column name="phone" value="600333444"/>
             <column name="role" value="USER"/>
             <column name="image_url" value="https://randomuser.me/api/portraits/women/68.jpg"/>

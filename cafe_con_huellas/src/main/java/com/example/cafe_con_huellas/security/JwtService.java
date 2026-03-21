@@ -18,50 +18,95 @@ import java.util.function.Function;
  * Servicio encargado de toda la lógica relacionada con los tokens JWT.
  * <p>
  * Gestiona la generación, validación y extracción de información de los tokens.
- * La clave secreta y el tiempo de expiración se configuran en
+ * Distingue entre dos tipos de token:
+ * <ul>
+ *   <li><b>Access token:</b> vida corta (15 min), contiene email y rol del usuario.</li>
+ *   <li><b>Refresh token:</b> vida larga (7 días), contiene solo el email y sirve
+ *       únicamente para renovar el access token sin forzar un nuevo login.</li>
+ * </ul>
+ * La clave secreta y los tiempos de expiración se configuran en
  * {@code application.properties} mediante las propiedades
- * {@code app.jwt.secret} y {@code app.jwt.expiration}.
+ * {@code app.jwt.secret}, {@code app.jwt.expiration} y
+ * {@code app.jwt.refresh-expiration}.
  * </p>
  */
 @Service
 public class JwtService {
 
-    // Clave secreta para firmar los tokens (mínimo 256 bits para HS256)
-    // Las leemos desde application.properties
+    /**
+     * Clave secreta para firmar los tokens (mínimo 256 bits para HS256).
+     * Se lee desde {@code app.jwt.secret} en application.properties.
+     */
     @Value("${app.jwt.secret}")
     private String secretKey;
 
+    /**
+     * Tiempo de expiración del access token en milisegundos (15 minutos).
+     * Se lee desde {@code app.jwt.expiration} en application.properties.
+     */
     @Value("${app.jwt.expiration}")
     private long expirationTime;
 
     /**
-     * Genera un token JWT para el email indicado sin claims adicionales.
-     *
-     * @param email email del usuario que se incluirá como subject del token
-     * @return token JWT firmado y listo para usar
+     * Tiempo de expiración del refresh token en milisegundos (7 días).
+     * Se lee desde {@code app.jwt.refresh-expiration} en application.properties.
      */
-    public String generateToken(String email) {
-        return generateToken(new HashMap<>(), email);
+    @Value("${app.jwt.refresh-expiration}")
+    private long refreshExpirationTime;
+
+    /**
+     * Genera un access token JWT con el email como subject y el rol como claim.
+     * <p>
+     * El rol se incluye dentro del token para que el backend pueda
+     * autorizarlo sin consultar la base de datos en cada petición.
+     * </p>
+     *
+     * @param email email del usuario, usado como subject del token
+     * @param role  rol del usuario (ej: "ADMIN", "USER"), incluido como claim
+     * @return access token JWT firmado con HS256
+     */
+    public String generateToken(String email, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+        return buildToken(claims, email, expirationTime);
     }
 
     /**
-     * Genera un token JWT con claims personalizados adicionales.
+     * Genera un refresh token JWT para el email indicado.
+     * <p>
+     * El refresh token no contiene rol ni otros datos sensibles.
+     * Su único propósito es permitir la renovación del access token
+     * cuando este expira, sin obligar al usuario a volver a loguearse.
+     * </p>
      *
-     * @param extraClaims mapa con los claims extra a incluir en el token (ej: rol)
-     * @param email       email del usuario que se incluirá como subject del token
-     * @return token JWT firmado con los claims indicados
+     * @param email email del usuario, usado como subject del token
+     * @return refresh token JWT firmado con HS256
      */
-    public String generateToken(Map<String, Object> extraClaims, String email) {
+    public String generateRefreshToken(String email) {
+        return buildToken(new HashMap<>(), email, refreshExpirationTime);
+    }
+
+    /**
+     * Método interno que construye cualquier token JWT con los parámetros indicados.
+     * <p>
+     * Centraliza la lógica de construcción para evitar duplicidad entre
+     * {@link #generateToken(String, String)} y {@link #generateRefreshToken(String)}.
+     * </p>
+     *
+     * @param claims    mapa de claims adicionales a incluir en el token
+     * @param email     email del usuario como subject
+     * @param expiration tiempo de vida del token en milisegundos
+     * @return token JWT firmado y compacto
+     */
+    private String buildToken(Map<String, Object> claims, String email, long expiration) {
         return Jwts.builder()
-                .setClaims(extraClaims)
+                .setClaims(claims)
                 .setSubject(email)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                // Usamos expirationTime desde properties
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-
 
     /**
      * Extrae el email (subject) almacenado dentro del token JWT.
@@ -74,10 +119,23 @@ public class JwtService {
     }
 
     /**
+     * Extrae el rol almacenado como claim dentro del access token.
+     * <p>
+     * Solo disponible en access tokens. Los refresh tokens no contienen rol.
+     * </p>
+     *
+     * @param token access token JWT del que extraer el rol
+     * @return rol del usuario (ej: "ADMIN", "USER"), o {@code null} si no existe el claim
+     */
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    /**
      * Comprueba si un token JWT es válido para el email indicado.
      * <p>
      * El token es válido si el email coincide con el subject
-     * y el token no ha expirado.
+     * y el token no ha expirado. Válido tanto para access como refresh tokens.
      * </p>
      *
      * @param token token JWT a validar
@@ -86,7 +144,6 @@ public class JwtService {
      */
     public boolean isTokenValid(String token, String email) {
         final String extractedEmail = extractEmail(token);
-        // Válido si el email coincide y el token no ha expirado
         return extractedEmail.equals(email) && !isTokenExpired(token);
     }
 
@@ -127,6 +184,7 @@ public class JwtService {
      * Decodifica el token JWT y devuelve todos sus claims.
      * <p>
      * Verifica la firma del token con la clave secreta antes de devolver los datos.
+     * Si la firma no es válida o el token está malformado, lanza una excepción.
      * </p>
      *
      * @param token token JWT a decodificar
@@ -134,7 +192,6 @@ public class JwtService {
      */
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
-                // Verificamos la firma con nuestra clave secreta
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
@@ -147,7 +204,6 @@ public class JwtService {
      * @return clave criptográfica lista para firmar y verificar tokens
      */
     private Key getSigningKey() {
-        // Usamos secretKey desde properties
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 }

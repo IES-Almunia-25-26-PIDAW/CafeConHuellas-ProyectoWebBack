@@ -6,11 +6,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO que se devuelve al frontend tras un login exitoso.
+ * DTO que se devuelve al frontend tras un login exitoso o una renovación de token.
  * <p>
- * Contiene el token JWT que el cliente debe almacenar y enviar
- * en el header {@code Authorization} de cada petición posterior,
- * junto con los datos básicos del usuario autenticado.
+ * Contiene únicamente los dos tokens JWT. Los datos del usuario (email y rol)
+ * viajan de forma segura <b>dentro</b> del access token como claims firmados,
+ * no expuestos directamente en la respuesta.
  * </p>
  */
 @Data
@@ -19,12 +19,23 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AuthResponseDTO {
 
-    /** Token JWT que el frontend debe incluir en cada petición como {@code Bearer <token>}. */
+    /**
+     * Access token JWT de corta duración (15 minutos).
+     * <p>
+     * El frontend debe enviarlo en cada petición autenticada mediante el header:
+     * {@code Authorization: Bearer <token>}
+     * Contiene el email como subject y el rol como claim interno.
+     * </p>
+     */
     private String token;
 
-    /** Email del usuario autenticado. (útil para el frontend) */
-    private String email;
-
-    /** Rol del usuario (ADMIN o USER) para que el frontend gestione la visibilidad de opciones. */
-    private String role;
+    /**
+     * Refresh token JWT de larga duración (7 días).
+     * <p>
+     * El frontend lo usa <b>exclusivamente</b> para solicitar un nuevo access token
+     * cuando este expira, llamando a {@code POST /api/auth/refresh}.
+     * Nunca debe enviarse en peticiones normales de la aplicación.
+     * </p>
+     */
+    private String refreshToken;
 }

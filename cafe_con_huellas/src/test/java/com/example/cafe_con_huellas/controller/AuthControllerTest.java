@@ -19,14 +19,18 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -53,8 +57,13 @@ class AuthControllerTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private UserDetailsService userDetailsService;
+
+    // -------------------- LOGIN --------------------
+
     @Test
-    @DisplayName("Login exitoso devuelve token y datos del usuario")
+    @DisplayName("Login exitoso devuelve access token y refresh token")
     void shouldLoginSuccessfully() throws Exception {
         LoginDTO loginDTO = LoginDTO.builder()
                 .email("ana@test.com")
@@ -69,20 +78,22 @@ class AuthControllerTest {
         when(authenticationManager.authenticate(any())).thenReturn(
                 new UsernamePasswordAuthenticationToken("ana@test.com", "password123"));
         when(userRepository.findByEmail("ana@test.com")).thenReturn(Optional.of(user));
-        when(jwtService.generateToken("ana@test.com")).thenReturn("mocked.jwt.token");
+        when(jwtService.generateToken("ana@test.com", "USER")).thenReturn("mocked.access.token");
+        when(jwtService.generateRefreshToken("ana@test.com")).thenReturn("mocked.refresh.token");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mocked.jwt.token"))
-                .andExpect(jsonPath("$.email").value("ana@test.com"))
-                .andExpect(jsonPath("$.role").value("USER"));
+                .andExpect(jsonPath("$.token").value("mocked.access.token"))
+                .andExpect(jsonPath("$.refreshToken").value("mocked.refresh.token"))
+                .andExpect(jsonPath("$.email").doesNotExist())
+                .andExpect(jsonPath("$.role").doesNotExist());
     }
 
     @Test
     @DisplayName("Login con credenciales incorrectas devuelve 401")
-    void shouldReturn401WhenBadCredentials() throws Exception {
+    void shouldReturn401WhenCredentialsAreInvalid() throws Exception {
         LoginDTO loginDTO = LoginDTO.builder()
                 .email("ana@test.com")
                 .password("wrongpassword")
@@ -94,15 +105,15 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginDTO)))
-                .andExpect(status().isUnauthorized()); // 401
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Login con email inválido devuelve 400")
-    void shouldReturn400WhenEmailInvalid() throws Exception {
+    @DisplayName("Login con datos inválidos devuelve 400")
+    void shouldReturn400WhenLoginDataInvalid() throws Exception {
         LoginDTO loginDTO = LoginDTO.builder()
                 .email("no-es-un-email")
-                .password("password123")
+                .password("")
                 .build();
 
         mockMvc.perform(post("/api/auth/login")
@@ -110,6 +121,70 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(status().isBadRequest());
     }
+
+    // -------------------- REFRESH --------------------
+
+    @Test
+    @DisplayName("Refresh con token válido devuelve nuevo access token")
+    void shouldRefreshTokenSuccessfully() throws Exception {
+        String refreshToken = "valid.refresh.token";
+        String email = "ana@test.com";
+
+        User user = User.builder()
+                .email(email)
+                .role(Role.USER)
+                .build();
+
+        // Mock del filtro JWT para que no falle al procesar el token en la petición
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                email, "password", List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
+        when(jwtService.extractEmail(refreshToken)).thenReturn(email);
+        when(jwtService.isTokenValid(refreshToken, email)).thenReturn(true);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(jwtService.generateToken(email, "USER")).thenReturn("new.access.token");
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .header("Authorization", "Bearer " + refreshToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("new.access.token"))
+                .andExpect(jsonPath("$.refreshToken").value(refreshToken));
+    }
+
+    @Test
+    @DisplayName("Refresh sin header Authorization devuelve 400")
+    void shouldReturn400WhenNoAuthHeader() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Refresh con token expirado devuelve 400")
+    void shouldReturn400WhenRefreshTokenExpired() throws Exception {
+        String expiredToken = "expired.refresh.token";
+        String email = "ana@test.com";
+
+        User user = User.builder()
+                .email(email)
+                .role(Role.USER)
+                .build();
+
+        // Mock del filtro JWT para que no falle al procesar el token en la petición
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                email, "password", List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
+        when(jwtService.extractEmail(expiredToken)).thenReturn(email);
+        when(jwtService.isTokenValid(expiredToken, email)).thenReturn(false);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .header("Authorization", "Bearer " + expiredToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    // -------------------- REGISTER --------------------
 
     @Test
     @DisplayName("Registro exitoso devuelve 201 y datos del usuario")
