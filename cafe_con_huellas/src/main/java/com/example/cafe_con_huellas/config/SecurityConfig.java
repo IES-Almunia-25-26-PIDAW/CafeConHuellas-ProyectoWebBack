@@ -2,8 +2,16 @@ package com.example.cafe_con_huellas.config;
 
 import com.example.cafe_con_huellas.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.config.Customizer;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -15,6 +23,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 /**
@@ -32,6 +44,22 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
+    @Value("${FRONTEND_URL:http://localhost:49655}")
+    private String frontendUrl;
+
+
+@Bean
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public CorsFilter corsFilter() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOrigins(List.of(frontendUrl));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+    config.setAllowedHeaders(List.of("*"));
+    config.setAllowCredentials(true);
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return new CorsFilter(source);
+}
 
     /**
      * Bean global para encriptar y verificar contraseñas usando el algoritmo BCrypt.
@@ -92,6 +120,7 @@ public class SecurityConfig {
         http
                 // Desactivamos CSRF porque usamos JWT, no sesiones
                 .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
 
                 // Sin estado: cada petición debe traer su propio token
                 .sessionManagement(session -> session
@@ -99,6 +128,7 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Rutas públicas: login, registro, Swagger y formulario de adopción
                         .requestMatchers(
                                 "/api/auth/**",
