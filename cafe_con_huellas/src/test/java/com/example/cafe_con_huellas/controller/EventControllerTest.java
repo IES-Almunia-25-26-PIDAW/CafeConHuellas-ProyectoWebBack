@@ -105,6 +105,42 @@ class EventControllerTest {
                 .andExpect(jsonPath("$[0].eventType").value("ADOPCION"));
     }
 
+    @Test
+    @DisplayName("GET /api/events sin autenticación devuelve 200")
+    void shouldGetAllEventsUnauthenticated() throws Exception {
+        when(eventService.findAll()).thenAnswer(inv -> List.of(buildDTO()));
+
+        mockMvc.perform(get("/api/events"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/events/{id} sin autenticación devuelve 200")
+    void shouldGetEventByIdUnauthenticated() throws Exception {
+        when(eventService.findById(1L)).thenReturn(buildDTO());
+
+        mockMvc.perform(get("/api/events/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/events/upcoming sin autenticación devuelve 200")
+    void shouldGetUpcomingEventsUnauthenticated() throws Exception {
+        when(eventService.findUpcomingEvents()).thenAnswer(inv -> List.of(buildDTO()));
+
+        mockMvc.perform(get("/api/events/upcoming"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/events/status/{status} sin autenticación devuelve 200")
+    void shouldGetEventsByStatusUnauthenticated() throws Exception {
+        when(eventService.findByStatus("PROGRAMADO")).thenAnswer(inv -> List.of(buildDTO()));
+
+        mockMvc.perform(get("/api/events/status/PROGRAMADO"))
+                .andExpect(status().isOk());
+    }
+
     // -------------------- POST --------------------
 
     @Test

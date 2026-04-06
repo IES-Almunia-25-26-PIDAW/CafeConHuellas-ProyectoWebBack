@@ -87,6 +87,42 @@ class PetControllerTest {
                 .andExpect(jsonPath("$.breed").value("Labrador"));
     }
 
+    @Test
+    @DisplayName("GET /api/pets sin autenticación devuelve 200")
+    void shouldGetAllPetsUnauthenticated() throws Exception {
+        when(petService.findAll()).thenAnswer(inv -> List.of(buildPetDetailDTO()));
+
+        mockMvc.perform(get("/api/pets"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/pets/{id} sin autenticación devuelve 200")
+    void shouldGetPetByIdUnauthenticated() throws Exception {
+        when(petService.findById(1L)).thenReturn(buildPetDetailDTO());
+
+        mockMvc.perform(get("/api/pets/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/pets/filter/neutered sin autenticación devuelve 200")
+    void shouldGetPetsByNeuteredUnauthenticated() throws Exception {
+        when(petService.findByNeutered(true)).thenAnswer(inv -> List.of(buildPetDetailDTO()));
+
+        mockMvc.perform(get("/api/pets/filter/neutered").param("neutered", "true"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/pets/filter/category sin autenticación devuelve 200")
+    void shouldGetPetsByCategoryUnauthenticated() throws Exception {
+        when(petService.findByCategory("PERRO")).thenAnswer(inv -> List.of(buildPetDetailDTO()));
+
+        mockMvc.perform(get("/api/pets/filter/category").param("category", "PERRO"))
+                .andExpect(status().isOk());
+    }
+
     // -------------------- POST --------------------
 
     @Test

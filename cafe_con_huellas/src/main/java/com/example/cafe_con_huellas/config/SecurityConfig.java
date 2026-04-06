@@ -128,7 +128,6 @@ public CorsFilter corsFilter() {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Rutas públicas: login, registro, Swagger y formulario de adopción
                         .requestMatchers(
                                 "/api/auth/**",
@@ -138,6 +137,12 @@ public CorsFilter corsFilter() {
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+
+                        // Lectura pública de mascotas y eventos
+                        .requestMatchers(HttpMethod.GET, "/api/pets/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/pet-images/**").permitAll()
+
                         // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()
                 )
