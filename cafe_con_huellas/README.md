@@ -64,7 +64,7 @@ El sistema distingue dos tipos de usuarios:
 ## ✅ Requisitos previos
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado y en ejecución
-- Una cuenta de Gmail con [contraseña de aplicación](https://myaccount.google.com/apppasswords) habilitada
+- No necesitas cuenta de Gmail para desarrollo. Los emails se capturan localmente con Mailpit.
 
 > No necesitas tener Java, Maven ni MySQL instalados localmente. Docker se encarga de todo: descarga las imágenes necesarias, compila el proyecto y levanta tanto la base de datos como el servidor de forma automática.
 
@@ -88,8 +88,10 @@ Crea un archivo llamado `.env` en la raíz del proyecto (en la misma carpeta don
 ```
 DB_USERNAME=cafe_user
 DB_PASSWORD=tu_password_segura
-MAIL_USERNAME=tucorreo@gmail.com
-MAIL_PASSWORD=xxxx xxxx xxxx xxxx
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+MAIL_USERNAME=noreply@cafehuellas.local
+MAIL_PASSWORD=
 JWT_SECRET=tu_clave_secreta_jwt_minimo_32_caracteres
 FRONTEND_URL=http://localhost:4200
 ```
@@ -98,8 +100,10 @@ FRONTEND_URL=http://localhost:4200
 |---|---|
 | `DB_USERNAME` | Usuario de la base de datos (cualquier nombre, no usar `root`) |
 | `DB_PASSWORD` | Contraseña de la base de datos |
-| `MAIL_USERNAME` | Correo Gmail desde el que se envían los emails |
-| `MAIL_PASSWORD` | Contraseña de aplicación de Gmail (no la contraseña normal de la cuenta) |
+| `MAIL_HOST` | Servidor SMTP. En local usar `mailpit` |
+| `MAIL_PORT` | Puerto SMTP. En local usar `1025` |
+| `MAIL_USERNAME` | Dirección remitente de los emails |
+| `MAIL_PASSWORD` | Contraseña SMTP. En local dejar vacío |
 | `JWT_SECRET` | Clave secreta para firmar los tokens JWT (mínimo 32 caracteres) |
 | `FRONTEND_URL` | URL del frontend para construir los enlaces en los correos |
 
@@ -121,9 +125,10 @@ docker compose up
 
 > Usa `--build` de nuevo solo si has hecho cambios en el código Java o en el `pom.xml`.
 
-Docker levantará dos contenedores:
+Docker levantará tres contenedores:
 - `cafe_con_huellas_db` → base de datos MySQL en el puerto 3307
 - `cafe_con_huellas_backend` → servidor Spring Boot en el puerto 8087
+- `cafe_con_huellas_mail` → Mailpit (capturador de emails) en el puerto 8025
 
 Liquibase creará automáticamente todas las tablas de la base de datos al arrancar.
 
@@ -171,6 +176,16 @@ Stop-Service -Name "MySQL*" -Force
 **El puerto 8087 ya está en uso**
 
 Otro proceso está usando ese puerto. Ciérralo o cambia el puerto en `docker-compose.yml`.
+
+---
+
+### 6. Ver los emails enviados (Mailpit)
+En desarrollo, ningún email se envía realmente. Todos quedan capturados en **Mailpit**, una bandeja de entrada local.
+Para verlos, abre en el navegador:
+```
+http://localhost:8025
+```
+Cada vez que la aplicación envíe un email (formulario de adopción, confirmación...) aparecerá aquí en lugar de llegar a ninguna bandeja real.
 
 ---
 
