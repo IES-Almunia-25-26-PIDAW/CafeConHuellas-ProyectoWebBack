@@ -17,6 +17,14 @@ services:
       timeout: 5s
       retries: 5
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: cafe_con_huellas_mail
+    ports:
+      - "1025:1025"   # puerto SMTP (Spring lo usa para enviar)
+      - "8025:8025"   # interfaz web para ver los emails
+    restart: unless-stopped
+
   backend:
     build: .
     container_name: cafe_con_huellas_backend
@@ -30,11 +38,15 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
       JWT_SECRET: ${JWT_SECRET}
       FRONTEND_URL: ${FRONTEND_URL}
     depends_on:
       mysql:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
 volumes:
   mysql_data:

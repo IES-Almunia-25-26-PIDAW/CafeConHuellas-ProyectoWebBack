@@ -1,9 +1,12 @@
 package com.example.cafe_con_huellas.service;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 /**
@@ -29,24 +32,34 @@ public class EmailService {
     private String fromEmail;
 
     /**
-     * Método genérico para enviar un correo electrónico simple.
+     * Método genérico para enviar un correo electrónico simple con soporte UTF-8.
+     * <p>
+     * Utiliza {@link MimeMessage} en lugar de {@link SimpleMailMessage} para garantizar
+     * la correcta codificación de caracteres especiales como tildes y eñes.
+     * Todos los emails de la aplicación pasan por este método.
+     * </p>
      *
      * @param to      dirección de correo del destinatario
      * @param subject asunto del mensaje
      * @param body    cuerpo del mensaje en texto plano
+     * @throws RuntimeException si ocurre un error al construir o enviar el mensaje
      */
     public void sendEmail(String to, String subject, String body) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        // Remitente
-        message.setFrom(fromEmail);
-        // Destinatario
-        message.setTo(to);
-        // Asunto
-        message.setSubject(subject);
-        // Cuerpo del mensaje
-        message.setText(body);
-
-        mailSender.send(message);
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            // Remitente
+            helper.setFrom(fromEmail);
+            // Destinatario
+            helper.setTo(to);
+            // Asunto
+            helper.setSubject(subject);
+            // Cuerpo del mensaje
+            helper.setText(body, false);
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Error al enviar el email", e);
+        }
     }
 
     /**
