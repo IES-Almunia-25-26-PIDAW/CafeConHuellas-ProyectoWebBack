@@ -98,7 +98,7 @@ FRONTEND_URL=http://localhost:4200
 
 | Variable | Descripción |
 |---|---|
-| `DB_USERNAME` | Usuario de la base de datos (cualquier nombre, no usar `root`) |
+| `DB_USERNAME` | Usuario de la base de datos (cualquier nombre, **no usar `root`**) |
 | `DB_PASSWORD` | Contraseña de la base de datos |
 | `MAIL_HOST` | Servidor SMTP. En local usar `mailpit` |
 | `MAIL_PORT` | Puerto SMTP. En local usar `1025` |
@@ -271,7 +271,7 @@ Desde ahí puedes explorar y probar todos los endpoints. Para los endpoints prot
 1. Haz login en `POST /api/auth/login`
 2. Copia el token que devuelve
 3. Pulsa el botón **Authorize 🔒** arriba a la derecha
-4. Pega el token con el formato: `Bearer <token>`
+4. Pega el token directamente en el campo y pulsa Authorize
 
 ---
 

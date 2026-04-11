@@ -16,7 +16,6 @@ import java.util.function.Function;
 
 /**
  * Servicio encargado de toda la lógica relacionada con los tokens JWT.
- * <p>
  * Gestiona la generación, validación y extracción de información de los tokens.
  * Distingue entre dos tipos de token:
  * <ul>
@@ -28,7 +27,6 @@ import java.util.function.Function;
  * {@code application.properties} mediante las propiedades
  * {@code app.jwt.secret}, {@code app.jwt.expiration} y
  * {@code app.jwt.refresh-expiration}.
- * </p>
  */
 @Service
 public class JwtService {

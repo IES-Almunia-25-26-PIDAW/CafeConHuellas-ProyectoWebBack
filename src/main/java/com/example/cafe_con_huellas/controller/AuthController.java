@@ -19,8 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 /**
- * Controlador REST para la autenticación de usuarios.
- * <p>
+ * Controlador REST para la autenticación de usuarios
  * Gestiona el acceso al sistema mediante tres endpoints públicos:
  * <ul>
  *   <li>{@code POST /api/auth/login} — autentica al usuario y devuelve ambos tokens.</li>
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.*;
  *   <li>{@code POST /api/auth/register} — registro público de nuevos usuarios.</li>
  * </ul>
  * Todos los endpoints son de acceso libre (configurado en {@code SecurityConfig}).
- * </p>
  */
 @RestController
 @RequestMapping("/api/auth")
