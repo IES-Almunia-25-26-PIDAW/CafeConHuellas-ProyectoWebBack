@@ -27,6 +27,11 @@ public class PetSummaryDTO {
     @Size(min = 2, max = 50, message = "El nombre debe tener entre 2 y 50 caracteres")
     private String name;
 
+    /** Descripción de la personalidad o historia del animal. */
+    @NotBlank(message = "La descripción es obligatoria")
+    @Size(min = 10, message = "La descripción debe ser detallada (mínimo 10 caracteres)")
+    private String description;
+
     /** Raza de la mascota. */
     @NotBlank(message = "La raza es obligatoria")
     private String breed;
@@ -60,4 +65,5 @@ public class PetSummaryDTO {
     @Pattern(regexp = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]",
             message = "La URL de la imagen debe ser válida")
     private String imageUrl;
+
 }

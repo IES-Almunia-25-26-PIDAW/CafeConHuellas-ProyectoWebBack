@@ -72,7 +72,8 @@ class PetControllerTest {
 
         mockMvc.perform(get("/api/pets"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Firu"));
+                .andExpect(jsonPath("$[0].name").value("Firu"))
+                .andExpect(jsonPath("$[0].description").value("Perro muy juguetón y cariñoso"));
     }
 
     @Test

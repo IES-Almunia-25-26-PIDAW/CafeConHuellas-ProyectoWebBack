@@ -1,0 +1,107 @@
+package com.example.cafe_con_huellas.service;
+import com.example.cafe_con_huellas.exception.BadRequestException;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Servicio encargado del almacenamiento de archivos de imagen en disco local.
+ * <p>
+ * Gestiona la subida de avatares de usuario, validando tipo, extensión
+ * y tamaño del archivo antes de guardarlo en la carpeta {@code uploads/avatars/}.
+ * Genera nombres únicos mediante UUID para evitar colisiones.
+ * </p>
+ */
+@Service
+public class FileStorageService {
+    /** Ruta del directorio donde se almacenan los avatares, relativa al directorio de ejecución. */
+    private static final Path UPLOAD_DIR = Paths.get("uploads/avatars");
+
+    /** Extensiones de imagen permitidas para la subida. */
+    private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "gif", "webp");
+
+    /** Tamaño máximo permitido por archivo: 5 MB. */
+    private static final long MAX_SIZE = 5 * 1024 * 1024;
+
+    /**
+     * Guarda una imagen de avatar en disco y devuelve su ruta pública.
+     * <p>Realiza las siguientes validaciones antes de persistir el archivo:</p>
+     * <ul>
+     *   <li>Que el archivo no esté vacío.</li>
+     *   <li>Que no supere el tamaño máximo de 5 MB.</li>
+     *   <li>Que la extensión sea una de las permitidas (jpg, jpeg, png, gif, webp).</li>
+     *   <li>Que el content-type corresponda a una imagen.</li>
+     * </ul>
+     * <p>El archivo se guarda con un nombre UUID único para evitar colisiones.</p>
+     *
+     * @param file archivo {@link MultipartFile} recibido desde el controlador
+     * @return ruta pública del archivo guardado, por ejemplo {@code /uploads/avatars/a1b2c3d4.jpg}
+     * @throws BadRequestException si el archivo está vacío, supera el tamaño, tiene extensión
+     *                             no permitida o no es una imagen válida
+     * @throws RuntimeException    si ocurre un error de entrada/salida al escribir en disco
+     */
+    public String saveAvatar(MultipartFile file) {
+        // Validar que no esté vacío
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("El archivo está vacío");
+        }
+
+        // Validar tamaño
+        if (file.getSize() > MAX_SIZE) {
+            throw new BadRequestException("El archivo supera el tamaño máximo de 5 MB");
+        }
+
+        // Validar extensión
+        String originalName = file.getOriginalFilename();
+        String extension = getExtension(originalName);
+        if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
+            throw new BadRequestException("Extensión no permitida. Usa: " + ALLOWED_EXTENSIONS);
+        }
+
+        // Validar que realmente sea una imagen por su content-type
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BadRequestException("El archivo no es una imagen válida");
+        }
+
+        try {
+            // Crear la carpeta si no existe
+            Files.createDirectories(UPLOAD_DIR);
+
+            // Nombre único para evitar colisiones: UUID + extensión original
+            String fileName = UUID.randomUUID() + "." + extension;
+            Path targetPath = UPLOAD_DIR.resolve(fileName);
+
+            // Copiar el archivo al disco
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+            // Devolver la ruta pública (la que servirá Spring como recurso estático)
+            return "/uploads/avatars/" + fileName;
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error al guardar el archivo: " + e.getMessage(), e);
+        }
+    }
+
+
+    /**
+     * Extrae la extensión de un nombre de archivo.
+     *
+     * @param fileName nombre original del archivo, por ejemplo {@code foto.jpg}
+     * @return extensión sin el punto, por ejemplo {@code jpg}
+     * @throws BadRequestException si el archivo no tiene extensión
+     */
+    private String getExtension(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            throw new BadRequestException("El archivo no tiene extensión");
+        }
+        return fileName.substring(fileName.lastIndexOf('.') + 1);
+    }
+}

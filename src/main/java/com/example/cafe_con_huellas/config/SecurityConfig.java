@@ -48,18 +48,23 @@ public class SecurityConfig {
     private String frontendUrl;
 
 
-@Bean
-@Order(Ordered.HIGHEST_PRECEDENCE)
-public CorsFilter corsFilter() {
-    CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOrigins(List.of(frontendUrl));
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-    config.setAllowedHeaders(List.of("*"));
-    config.setAllowCredentials(true);
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config);
-    return new CorsFilter(source);
-}
+    /**
+     * Configura el filtro CORS para permitir peticiones desde el frontend.
+     *
+     * @return {@link CorsFilter} con los orígenes y métodos permitidos
+     */
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public CorsFilter corsFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(frontendUrl));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }
 
     /**
      * Bean global para encriptar y verificar contraseñas usando el algoritmo BCrypt.
@@ -135,13 +140,17 @@ public CorsFilter corsFilter() {
                                 "/api/adoption-form/submit/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/uploads/**"
                         ).permitAll()
 
                         // Lectura pública de mascotas y eventos
                         .requestMatchers(HttpMethod.GET, "/api/pets/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pet-images/**").permitAll()
+
+                        // Subir imagen avatar
+                        .requestMatchers(HttpMethod.POST, "/api/files/**").permitAll()
 
                         // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()

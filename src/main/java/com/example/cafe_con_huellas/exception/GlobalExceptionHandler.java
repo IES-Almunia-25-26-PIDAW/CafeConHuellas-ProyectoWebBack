@@ -47,6 +47,26 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+
+
+    /**
+     * Maneja los errores de archivo faltante en peticiones multipart.
+     * <p>
+     * Se lanza cuando el cliente envía una petición multipart sin incluir
+     * el archivo obligatorio (por ejemplo, sin el campo {@code file}).
+     * Devuelve HTTP {@code 400 Bad Request}.
+     * </p>
+     *
+     * @param ex excepción con el nombre del campo que falta
+     * @return respuesta JSON con timestamp y mensaje descriptivo
+     */
+    @ExceptionHandler(org.springframework.web.multipart.support.MissingServletRequestPartException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingPart(
+            org.springframework.web.multipart.support.MissingServletRequestPartException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Falta el archivo en la petición: " + ex.getRequestPartName());
+    }
+
+
     /**
      * Maneja los errores de validación de los DTOs anotados con {@code @Valid}.
      * <p>
