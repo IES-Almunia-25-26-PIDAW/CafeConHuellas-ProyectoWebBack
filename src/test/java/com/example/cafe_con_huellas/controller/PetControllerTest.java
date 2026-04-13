@@ -58,6 +58,7 @@ class PetControllerTest {
                 .weight(BigDecimal.valueOf(25.0))
                 .neutered(true)
                 .isPpp(false)
+                .urgentAdoption(false)
                 .imageUrl("https://example.com/firu.jpg")
                 .build();
     }

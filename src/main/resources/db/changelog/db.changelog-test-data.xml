@@ -46,6 +46,7 @@
             <column name="weight" valueNumeric="18.50"/>
             <column name="neutered" valueNumeric="1"/>
             <column name="is_ppp" valueNumeric="0"/>
+            <column name="urgent_adoption" valueNumeric="0"/>
             <column name="image_url" value="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600"/>
         </insert>
         <insert tableName="Pet">
@@ -57,6 +58,7 @@
             <column name="weight" valueNumeric="30.00"/>
             <column name="neutered" valueNumeric="1"/>
             <column name="is_ppp" valueNumeric="0"/>
+            <column name="urgent_adoption" valueNumeric="0"/>
             <column name="image_url" value="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600"/>
         </insert>
         <insert tableName="Pet">
@@ -68,6 +70,7 @@
             <column name="weight" valueNumeric="22.00"/>
             <column name="neutered" valueNumeric="1"/>
             <column name="is_ppp" valueNumeric="1"/>
+            <column name="urgent_adoption" valueNumeric="1"/>
             <column name="image_url" value="https://images.unsplash.com/photo-1588943211346-0908a1fb0b01?w=600"/>
         </insert>
         <insert tableName="Pet">
@@ -79,6 +82,7 @@
             <column name="weight" valueNumeric="3.20"/>
             <column name="neutered" valueNumeric="1"/>
             <column name="is_ppp" valueNumeric="0"/>
+            <column name="urgent_adoption" valueNumeric="0"/>
             <column name="image_url" value="https://images.unsplash.com/photo-1534361960057-19f4434c8c83?w=600"/>
         </insert>
         <insert tableName="Pet">
@@ -90,6 +94,7 @@
             <column name="weight" valueNumeric="28.00"/>
             <column name="neutered" valueNumeric="0"/>
             <column name="is_ppp" valueNumeric="0"/>
+            <column name="urgent_adoption" valueNumeric="1"/>
             <column name="image_url" value="https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=600"/>
         </insert>
         <insert tableName="Pet">
@@ -101,6 +106,7 @@
             <column name="weight" valueNumeric="4.10"/>
             <column name="neutered" valueNumeric="1"/>
             <column name="is_ppp" valueNumeric="0"/>
+            <column name="urgent_adoption" valueNumeric="1"/>
             <column name="image_url" value="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600"/>
         </insert>
         <insert tableName="Pet">
@@ -112,6 +118,7 @@
             <column name="weight" valueNumeric="3.80"/>
             <column name="neutered" valueNumeric="1"/>
             <column name="is_ppp" valueNumeric="0"/>
+            <column name="urgent_adoption" valueNumeric="0"/>
             <column name="image_url" value="https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600"/>
         </insert>
         <insert tableName="Pet">
@@ -123,6 +130,7 @@
             <column name="weight" valueNumeric="5.50"/>
             <column name="neutered" valueNumeric="1"/>
             <column name="is_ppp" valueNumeric="0"/>
+            <column name="urgent_adoption" valueNumeric="0"/>
             <column name="image_url" value="https://images.unsplash.com/photo-1533743983669-94fa5c4338ec?w=600"/>
         </insert>
     </changeSet>

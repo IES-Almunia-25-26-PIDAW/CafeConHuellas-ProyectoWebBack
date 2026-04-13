@@ -64,6 +64,10 @@ public class PetDetailDTO {
     @NotNull(message = "Indica si es una raza potencialmente peligrosa (PPP)")
     private Boolean isPpp;
 
+    /** Indica si la adopción de esta mascota es urgente. */
+    @NotNull(message = "Indica si la adopción es urgente")
+    private Boolean urgentAdoption;
+
     /** URL de la imagen principal de la mascota. Debe ser una URL válida. (Portada) */
     @NotBlank(message = "La imagen principal de la mascota es obligatoria")
     @Pattern(regexp = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]",

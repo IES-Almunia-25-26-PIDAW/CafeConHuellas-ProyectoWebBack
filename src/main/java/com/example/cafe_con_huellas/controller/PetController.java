@@ -131,4 +131,17 @@ public class PetController {
                 .map((PetDetailDTO dto) -> petMapper.toSummaryDto(dto))
                 .toList();
     }
+
+    /**
+     * Filtra el catálogo de mascotas según urgencia de adopción.
+     *
+     * @param urgent {@code true} para mostrar solo adopciones urgentes
+     * @return lista de {@link PetSummaryDTO} filtrada por urgencia
+     */
+    @GetMapping("/filter/urgent")
+    public List<PetSummaryDTO> getPetsByUrgentAdoption(@RequestParam Boolean urgent) {
+        return petService.findByUrgentAdoption(urgent).stream()
+                .map((PetDetailDTO dto) -> petMapper.toSummaryDto(dto))
+                .toList();
+    }
 }

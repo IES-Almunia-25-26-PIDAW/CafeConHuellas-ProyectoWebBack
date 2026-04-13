@@ -403,6 +403,17 @@
         </createTable>
     </changeSet>
 
+    <!-- ============================================================ -->
+    <!-- Changeset 13: Añadir columna urgent_adoption a Pet           -->
+    <!-- ============================================================ -->
+    <changeSet id="13" author="ana">
+        <addColumn tableName="Pet">
+            <column name="urgent_adoption" type="TINYINT(1)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
     <include file="db/changelog/db.changelog-test-data.xml"/>
 
 </databaseChangeLog>

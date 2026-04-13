@@ -63,6 +63,10 @@ public class Pet {
     @Column(name = "is_ppp", nullable = false)
     private Boolean isPpp = false;
 
+    /** Indica si la adopción de esta mascota es urgente. */
+    @Column(name = "urgent_adoption", nullable = false)
+    private Boolean urgentAdoption = false;
+
     /** URL de la imagen principal de la mascota. */
     @Column(name = "image_url")
     private String imageUrl;

@@ -42,6 +42,14 @@ public interface PetRepository extends JpaRepository<Pet, Long> {
     List<Pet> findByIsPpp(Boolean isPpp);
 
     /**
+     * Filtra las mascotas según si su adopción es urgente o no.
+     *
+     * @param urgentAdoption {@code true} para adopciones urgentes
+     * @return lista de mascotas con el estado de urgencia indicado
+     */
+    List<Pet> findByUrgentAdoption(Boolean urgentAdoption);
+
+    /**
      * Filtra las mascotas cuya edad sea igual o inferior a la indicada.
      *
      * @param age edad máxima en años

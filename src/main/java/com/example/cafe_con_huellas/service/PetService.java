@@ -137,6 +137,19 @@ public class PetService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Filtra las mascotas por urgencia de adopción.
+     *
+     * @param urgentAdoption {@code true} para adopciones urgentes
+     * @return lista de {@link PetDetailDTO} filtrada por urgencia
+     */
+    @Transactional(readOnly = true)
+    public List<PetDetailDTO> findByUrgentAdoption(Boolean urgentAdoption) {
+        return petRepository.findByUrgentAdoption(urgentAdoption).stream()
+                .map(petMapper::toDetailDto)
+                .collect(Collectors.toList());
+    }
+
     // ---------- ACTUALIZACIÓN CONTROLADA ----------
 
     /**
@@ -165,6 +178,7 @@ public class PetService {
         pet.setWeight(dto.getWeight());
         pet.setNeutered(dto.getNeutered());
         pet.setIsPpp(dto.getIsPpp());
+        pet.setUrgentAdoption(dto.getUrgentAdoption());
         pet.setCategory(PetCategory.valueOf(dto.getCategory().toUpperCase()));
 
         // La imagen principal también es editable

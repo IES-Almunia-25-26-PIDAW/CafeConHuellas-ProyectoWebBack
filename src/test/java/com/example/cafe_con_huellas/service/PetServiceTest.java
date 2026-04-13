@@ -44,12 +44,14 @@ class PetServiceTest {
         testPet.setId(1L);
         testPet.setName("Firu");
         testPet.setBreed("Labrador");
+        testPet.setUrgentAdoption(false);
         testPet.setCategory(PetCategory.PERRO);
 
         testPetDetailDTO = new PetDetailDTO();
         testPetDetailDTO.setId(1L);
         testPetDetailDTO.setName("Firu");
         testPetDetailDTO.setBreed("Labrador");
+        testPetDetailDTO.setUrgentAdoption(false);
         testPetDetailDTO.setCategory("PERRO");
     }
 

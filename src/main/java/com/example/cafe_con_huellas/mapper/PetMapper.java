@@ -53,6 +53,7 @@ public interface PetMapper {
         pet.setWeight(dto.getWeight());
         pet.setNeutered(dto.getNeutered());
         pet.setIsPpp(dto.getIsPpp());
+        pet.setUrgentAdoption(dto.getUrgentAdoption());
         pet.setImageUrl(dto.getImageUrl());
         return pet;
     }
