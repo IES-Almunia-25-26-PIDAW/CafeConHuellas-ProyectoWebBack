@@ -1,0 +1,7 @@
+# Override de desarrollo: expone MySQL en localhost:3307
+# para poder conectarse desde fuera de Docker (IntelliJ, Workbench, etc.)
+# Este archivo se aplica automaticamente con "docker compose up"
+services:
+  mysql:
+    ports:
+      - "3307:3306"

@@ -138,6 +138,7 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/adoption-form/validate/**",
                                 "/api/adoption-form/submit/**",
+                                "/api/health-check",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",

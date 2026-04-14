@@ -179,6 +179,15 @@ Otro proceso está usando ese puerto. Ciérralo o cambia el puerto en `docker-co
 
 ---
 
+### 🔒 Nota sobre la configuración de Docker en producción
+
+El archivo `docker-compose.yml` no expone el puerto de MySQL al exterior por seguridad. En su lugar, el archivo `docker-compose.override.yml` se encarga de exponer el puerto `3307` automáticamente en desarrollo para poder conectarse desde herramientas externas (IntelliJ, MySQL Workbench, etc.).
+
+- **En desarrollo**: no hay que hacer nada especial. `docker compose up` aplica ambos archivos automáticamente.
+- **En producción**: usar `docker compose -f docker-compose.yml up` para que MySQL solo sea accesible desde la red interna de Docker.
+
+---
+
 ### 6. Ver los emails enviados (Mailpit)
 En desarrollo, ningún email se envía realmente. Todos quedan capturados en **Mailpit**, una bandeja de entrada local.
 Para verlos, abre en el navegador:

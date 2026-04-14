@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +31,28 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
+
+
+    /**
+     * Devuelve el perfil completo del usuario autenticado.
+     * <p>
+     * No requiere rol específico: cualquier usuario con un token válido
+     * puede consultar su propio perfil. El backend identifica al usuario
+     * a partir del email almacenado en el JWT (subject), nunca desde
+     * un parámetro enviado por el cliente.
+     * </p>
+     *
+     * @return {@link UserDetailDTO} con los datos del usuario autenticado
+     */
+    @GetMapping("/me")
+    public UserDetailDTO getMyProfile() {
+        // SecurityContextHolder contiene la autenticación que el JwtAuthFilter
+        // estableció al validar el token. getName() devuelve el email (subject del JWT).
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+        return userService.findByEmail(email);
+    }
 
     /**
      * Obtiene una lista simplificada de todos los usuarios del sistema.

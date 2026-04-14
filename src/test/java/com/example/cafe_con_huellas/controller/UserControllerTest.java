@@ -74,6 +74,46 @@ class UserControllerTest {
                 .build();
     }
 
+    // -------------------- GET /me --------------------
+
+    @Test
+    @DisplayName("GET /api/users/me con usuario autenticado devuelve su perfil")
+    @WithMockUser(username = "maria@example.com", roles = "USER")
+    void shouldGetMyProfileAsUser() throws Exception {
+        when(userService.findByEmail("maria@example.com")).thenReturn(buildUserDetailDTO());
+
+        mockMvc.perform(get("/api/users/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("maria@example.com"))
+                .andExpect(jsonPath("$.firstName").value("María"));
+    }
+
+    @Test
+    @DisplayName("GET /api/users/me con ADMIN también devuelve su perfil")
+    @WithMockUser(username = "admin@example.com", roles = "ADMIN")
+    void shouldGetMyProfileAsAdmin() throws Exception {
+        UserDetailDTO adminDTO = UserDetailDTO.builder()
+                .id(2L)
+                .firstName("Admin")
+                .lastName1("Test")
+                .email("admin@example.com")
+                .role("ADMIN")
+                .build();
+        when(userService.findByEmail("admin@example.com")).thenReturn(adminDTO);
+
+        mockMvc.perform(get("/api/users/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("admin@example.com"))
+                .andExpect(jsonPath("$.role").value("ADMIN"));
+    }
+
+    @Test
+    @DisplayName("GET /api/users/me sin autenticación devuelve 403")
+    void shouldReturn403WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/users/me"))
+                .andExpect(status().isForbidden());
+    }
+
     // -------------------- GET --------------------
 
     @Test
