@@ -94,6 +94,8 @@ MAIL_USERNAME=noreply@cafehuellas.local
 MAIL_PASSWORD=
 JWT_SECRET=tu_clave_secreta_jwt_minimo_32_caracteres
 FRONTEND_URL=http://localhost:4200
+BACKEND_URL=http://localhost:8087
+
 ```
 
 | Variable | Descripción |
@@ -106,6 +108,7 @@ FRONTEND_URL=http://localhost:4200
 | `MAIL_PASSWORD` | Contraseña SMTP. En local dejar vacío |
 | `JWT_SECRET` | Clave secreta para firmar los tokens JWT (mínimo 32 caracteres) |
 | `FRONTEND_URL` | URL del frontend para construir los enlaces en los correos |
+| `BACKEND_URL` | URL base del backend para construir las URLs públicas de los archivos subidos |
 
 > ⚠️ El archivo `.env` está en `.gitignore` y **nunca se sube al repositorio** para proteger las credenciales.
 

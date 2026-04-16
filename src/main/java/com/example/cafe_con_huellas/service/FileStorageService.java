@@ -2,6 +2,7 @@ package com.example.cafe_con_huellas.service;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,7 +32,16 @@ public class FileStorageService {
     private static final long MAX_SIZE = 5 * 1024 * 1024;
 
     /**
-     * Guarda una imagen de avatar en disco y devuelve su ruta pública.
+     * URL base del backend, leída desde {@code app.base-url} en application.properties.
+     * Se usa para construir la URL pública completa del archivo subido,
+     * de forma que el frontend pueda acceder directamente a la imagen sin
+     * tener que conocer ni construir la URL del servidor.
+     */
+    @Value("${app.base-url}")
+    private String baseUrl;
+
+    /**
+     * Guarda una imagen de avatar en disco y devuelve su URL pública completa.
      * <p>Realiza las siguientes validaciones antes de persistir el archivo:</p>
      * <ul>
      *   <li>Que el archivo no esté vacío.</li>
@@ -82,13 +92,14 @@ public class FileStorageService {
             // Copiar el archivo al disco
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
-            // Devolver la ruta pública (la que servirá Spring como recurso estático)
-            return "/uploads/avatars/" + fileName;
+            // Devolver la URL pública completa incluyendo la base del servidor,
+            // para que el frontend pueda usarla directamente sin transformaciones
+            return baseUrl + "/uploads/avatars/" + fileName;
 
         } catch (IOException e) {
             throw new RuntimeException("Error al guardar el archivo: " + e.getMessage(), e);
         }
-    }
+}
 
 
     /**

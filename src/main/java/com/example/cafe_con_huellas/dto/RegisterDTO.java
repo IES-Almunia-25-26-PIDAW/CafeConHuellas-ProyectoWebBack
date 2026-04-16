@@ -45,9 +45,9 @@ public class RegisterDTO {
     @Size(min = 8, message = "La contraseña debe tener mínimo 8 caracteres")
     private String password;
 
-    /** Teléfono de contacto. Debe tener exactamente 9 dígitos numéricos. */
+    /** Teléfono de contacto. Formato internacional: entre 7 y 15 dígitos, con prefijo opcional (+). */
     @NotBlank(message = "El teléfono es obligatorio")
-    @Pattern(regexp = "^[0-9]{9}$", message = "El teléfono debe tener 9 dígitos")
+    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "El teléfono debe tener entre 7 y 15 dígitos numéricos, con prefijo internacional opcional (+)")
     private String phone;
 
     /** Rol del usuario (ADMIN o USER). Si no se especifica, se asigna USER por defecto. */

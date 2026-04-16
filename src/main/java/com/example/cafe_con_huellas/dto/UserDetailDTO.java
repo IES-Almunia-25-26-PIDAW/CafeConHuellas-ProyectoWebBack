@@ -44,9 +44,9 @@ public class UserDetailDTO {
     @Email(message = "El formato del email no es válido")
     private String email;
 
-    /** Teléfono de contacto. Debe tener exactamente 9 dígitos numéricos. */
+    /** Teléfono de contacto. Formato internacional: entre 7 y 15 dígitos, con prefijo opcional (+). */
     @NotBlank(message = "El teléfono es obligatorio")
-    @Pattern(regexp = "^[0-9]{9}$", message = "El teléfono debe tener exactamente 9 dígitos numéricos")
+    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "El teléfono debe tener entre 7 y 15 dígitos numéricos, con prefijo internacional opcional (+)")
     private String phone;
 
     /** Rol del usuario en el sistema (ADMIN o USER). El mapper lo convierte al enum correspondiente. */

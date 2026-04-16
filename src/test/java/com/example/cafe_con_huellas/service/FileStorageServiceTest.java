@@ -1,8 +1,8 @@
 package com.example.cafe_con_huellas.service;
 
-
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +36,17 @@ class FileStorageServiceTest {
 
     /** Ruta de la carpeta de subida usada por el servicio. */
     private static final Path UPLOAD_DIR = Paths.get("uploads/avatars");
+
+    /**
+     * Inyecta manualmente el valor de {@code app.base-url} en el servicio,
+     * ya que Mockito no levanta contexto de Spring y no lee el application.properties.
+     */
+    @BeforeEach
+    void setUp() throws Exception {
+        java.lang.reflect.Field field = FileStorageService.class.getDeclaredField("baseUrl");
+        field.setAccessible(true);
+        field.set(fileStorageService, "http://localhost:8087");
+    }
 
     /**
      * Limpia la carpeta de uploads después de cada test
@@ -79,11 +90,11 @@ class FileStorageServiceTest {
 
         String result = fileStorageService.saveAvatar(file);
 
-        assertThat(result).startsWith("/uploads/avatars/");
+        assertThat(result).startsWith("http://localhost:8087/uploads/avatars/");
         assertThat(result).endsWith(".jpg");
 
         // Verificar que el archivo existe físicamente en disco
-        String fileName = result.replace("/uploads/avatars/", "");
+        String fileName = result.replace("http://localhost:8087/uploads/avatars/", "");
         assertThat(Files.exists(UPLOAD_DIR.resolve(fileName))).isTrue();
     }
 
@@ -99,7 +110,7 @@ class FileStorageServiceTest {
 
         String result = fileStorageService.saveAvatar(file);
 
-        assertThat(result).startsWith("/uploads/avatars/");
+        assertThat(result).startsWith("http://localhost:8087/uploads/avatars/");
         assertThat(result).endsWith(".png");
     }
 

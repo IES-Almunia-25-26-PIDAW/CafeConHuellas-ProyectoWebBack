@@ -59,11 +59,11 @@ class FileControllerTest {
                 "imagen de prueba".getBytes()
         );
 
-        when(fileStorageService.saveAvatar(any())).thenReturn("/uploads/avatars/uuid-test.jpg");
+        when(fileStorageService.saveAvatar(any())).thenReturn("http://localhost:8087/uploads/avatars/uuid-test.jpg");
 
         mockMvc.perform(multipart("/api/files/upload-avatar").file(file))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.imageUrl").value("/uploads/avatars/uuid-test.jpg"));
+                .andExpect(jsonPath("$.imageUrl").value("http://localhost:8087/uploads/avatars/uuid-test.jpg"));
     }
 
     @Test
