@@ -90,6 +90,48 @@ class AdoptionRequestControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    @DisplayName("GET /api/adoption-requests?email=xxx con ADMIN devuelve solicitudes de ese usuario")
+    @WithMockUser(roles = "ADMIN")
+    void shouldReturnRequestsByEmailAsAdmin() throws Exception {
+        when(requestService.findByUserEmail("maria@example.com")).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/adoption-requests")
+                        .param("email", "maria@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].userEmail").value("maria@example.com"));
+    }
+
+    @Test
+    @DisplayName("GET /api/adoption-requests?email=xxx sin ADMIN devuelve 403")
+    @WithMockUser(roles = "USER")
+    void shouldReturn403WhenFilterByEmailAsUser() throws Exception {
+        mockMvc.perform(get("/api/adoption-requests")
+                        .param("email", "maria@example.com"))
+                .andExpect(status().isForbidden());
+    }
+
+    // -------------------- GET /api/adoption-requests/me --------------------
+
+    @Test
+    @DisplayName("GET /api/adoption-requests/me con usuario autenticado devuelve sus solicitudes")
+    @WithMockUser(username = "maria@example.com", roles = "USER")
+    void shouldGetMyRequestsAsUser() throws Exception {
+        when(requestService.findByUserEmail("maria@example.com")).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/adoption-requests/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].userEmail").value("maria@example.com"));
+    }
+
+    @Test
+    @DisplayName("GET /api/adoption-requests/me sin autenticación devuelve 403")
+    void shouldReturn403WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/adoption-requests/me"))
+                .andExpect(status().isForbidden());
+    }
+
     // -------------------- GET /api/adoption-requests/status/{status} --------------------
 
     @Test

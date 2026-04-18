@@ -80,6 +80,23 @@ public class AdoptionRequestService {
     }
 
     /**
+     * Obtiene todas las solicitudes de adopción del usuario autenticado identificado por su email.
+     * <p>
+     * El email se extrae del JWT en el controlador mediante {@code SecurityContextHolder},
+     * nunca se acepta como parámetro del cliente.
+     * </p>
+     *
+     * @param email email del usuario autenticado (subject del JWT)
+     * @return lista de {@link AdoptionRequestDTO} del usuario indicado
+     */
+    @Transactional(readOnly = true)
+    public List<AdoptionRequestDTO> findByUserEmail(String email) {
+        return requestRepository.findByUserEmail(email).stream()
+                .map(requestMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Busca una solicitud concreta por su identificador.
      *
      * @param id identificador único de la solicitud

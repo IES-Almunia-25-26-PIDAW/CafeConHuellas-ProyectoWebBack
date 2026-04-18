@@ -57,6 +57,7 @@ class AdoptionRequestRepositoryTest {
                 .weight(BigDecimal.valueOf(25.0))
                 .neutered(true)
                 .isPpp(false)
+                .urgentAdoption(false)
                 .build();
         pet = petRepository.save(pet);
 
@@ -113,6 +114,23 @@ class AdoptionRequestRepositoryTest {
 
         assertThat(result).isPresent();
         assertThat(result.get().getCity()).isEqualTo("Jerez");
+    }
+
+    @Test
+    @DisplayName("findByUserEmail() devuelve las solicitudes del usuario con ese email")
+    void shouldFindByUserEmail() {
+        List<AdoptionRequest> result = requestRepository.findByUserEmail("ana@test.com");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getFormToken().getUser().getEmail()).isEqualTo("ana@test.com");
+    }
+
+    @Test
+    @DisplayName("findByUserEmail() devuelve lista vacía si el email no tiene solicitudes")
+    void shouldReturnEmptyWhenEmailHasNoRequests() {
+        List<AdoptionRequest> result = requestRepository.findByUserEmail("noexiste@test.com");
+
+        assertThat(result).isEmpty();
     }
 
     @Test

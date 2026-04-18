@@ -111,7 +111,8 @@ public class SecurityConfig {
      * <ul>
      *   <li>CSRF desactivado al usar JWT en lugar de sesiones.</li>
      *   <li>Política de sesiones sin estado: cada petición debe incluir su propio token.</li>
-     *   <li>Rutas públicas: {@code /api/auth/**}, formulario de adopción y documentación Swagger.</li>
+     *   <li>Rutas públicas: {@code /api/auth/**}, formulario de adopción, documentación Swagger y subida de avatar.</li>
+     *   <li>Subida de imágenes de mascotas y eventos: protegidas por {@code @PreAuthorize("hasRole('ADMIN')")}.</li>
      *   <li>El resto de rutas requieren autenticación.</li>
      *   <li>El filtro {@link JwtAuthFilter} se ejecuta antes del filtro estándar de Spring.</li>
      * </ul>
@@ -150,8 +151,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pet-images/**").permitAll()
 
-                        // Subir imagen avatar
-                        .requestMatchers(HttpMethod.POST, "/api/files/**").permitAll()
+                        // Solo la subida de avatar es pública (se usa antes del registro)
+                        // Los endpoints de mascota y evento quedan protegidos por @PreAuthorize en el controlador
+                        .requestMatchers(HttpMethod.POST, "/api/files/upload-avatar").permitAll()
 
                         // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()

@@ -109,6 +109,26 @@ class DonationControllerTest {
                 .andExpect(jsonPath("$[0].userId").value(1));
     }
 
+    // -------------------- GET /me --------------------
+
+    @Test
+    @DisplayName("GET /api/donations/me con usuario autenticado devuelve sus donaciones")
+    @WithMockUser(username = "ana@test.com", roles = "USER")
+    void shouldGetMyDonationsAsUser() throws Exception {
+        when(donationService.findByUserEmail("ana@test.com")).thenReturn(List.of(buildDTO()));
+
+        mockMvc.perform(get("/api/donations/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].userId").value(1));
+    }
+
+    @Test
+    @DisplayName("GET /api/donations/me sin autenticación devuelve 403")
+    void shouldReturn401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/donations/me"))
+                .andExpect(status().isForbidden());
+    }
+
     @Test
     @DisplayName("GET /api/donations/category/{category} con ADMIN devuelve lista")
     @WithMockUser(roles = "ADMIN")

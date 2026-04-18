@@ -3,6 +3,7 @@ package com.example.cafe_con_huellas.repository;
 import com.example.cafe_con_huellas.model.entity.AdoptionRequest;
 import com.example.cafe_con_huellas.model.entity.AdoptionRequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,4 +41,29 @@ public interface AdoptionRequestRepository extends JpaRepository<AdoptionRequest
      * @return {@link Optional} con la solicitud si existe
      */
     Optional<AdoptionRequest> findByFormTokenId(Long formTokenId);
+
+    /**
+     * Devuelve todas las solicitudes de adopción cuyo formulario pertenece
+     * al usuario con el email indicado.
+     * <p>
+     * Usado por {@code GET /api/adoption-requests/me} para que el usuario autenticado
+     * consulte únicamente sus propias solicitudes. El email se extrae del JWT,
+     * nunca se acepta como parámetro del cliente.
+     * Se usa JPQL porque el usuario está dos niveles de relación hacia abajo
+     * ({@code formToken → user → email}).
+     * </p>
+     *
+     * @param email email del usuario autenticado
+     * @return lista de solicitudes asociadas al usuario indicado
+     */
+    @Query("SELECT r FROM AdoptionRequest r WHERE r.formToken.user.email = :email")
+    List<AdoptionRequest> findByUserEmail(String email);
+
+    /**
+     * Filtra las solicitudes por el email del usuario vinculado al token.
+     *
+     * @param email email del usuario
+     * @return lista de solicitudes de ese usuario
+     */
+    List<AdoptionRequest> findByFormTokenUserEmail(String email);
 }

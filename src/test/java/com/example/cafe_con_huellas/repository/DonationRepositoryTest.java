@@ -74,6 +74,23 @@ class DonationRepositoryTest {
     }
 
     @Test
+    @DisplayName("Debe encontrar donaciones por email de usuario")
+    void shouldFindByUserEmail() {
+        List<Donation> result = donationRepository.findByUserEmail("ana@test.com");
+
+        assertThat(result).hasSize(2);
+        assertThat(result).allMatch(d -> d.getUser().getEmail().equals("ana@test.com"));
+    }
+
+    @Test
+    @DisplayName("Debe devolver lista vacía si el email no tiene donaciones")
+    void shouldReturnEmptyWhenEmailHasNoDonations() {
+        List<Donation> result = donationRepository.findByUserEmail("noexiste@test.com");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     @DisplayName("Debe encontrar donaciones por categoría")
     void shouldFindByCategory() {
         List<Donation> result = donationRepository.findByCategory(DonationCategory.MONETARIA);

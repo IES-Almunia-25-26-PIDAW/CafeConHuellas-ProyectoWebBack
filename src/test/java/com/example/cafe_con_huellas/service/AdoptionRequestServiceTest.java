@@ -129,6 +129,30 @@ class AdoptionRequestServiceTest {
         assertThat(result).hasSize(1);
     }
 
+    // -------------------- findByUserEmail --------------------
+
+    @Test
+    @DisplayName("findByUserEmail() devuelve las solicitudes del usuario autenticado")
+    void shouldReturnRequestsByUserEmail() {
+        when(requestRepository.findByUserEmail("maria@example.com")).thenReturn(List.of(adoptionRequest));
+        when(requestMapper.toDto(any())).thenReturn(adoptionRequestDTO);
+
+        List<AdoptionRequestDTO> result = requestService.findByUserEmail("maria@example.com");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("findByUserEmail() devuelve lista vacía si el usuario no tiene solicitudes")
+    void shouldReturnEmptyWhenUserHasNoRequests() {
+        when(requestRepository.findByUserEmail("noexiste@test.com")).thenReturn(List.of());
+
+        List<AdoptionRequestDTO> result = requestService.findByUserEmail("noexiste@test.com");
+
+        assertThat(result).isEmpty();
+    }
+
     // -------------------- findByStatus --------------------
 
     @Test

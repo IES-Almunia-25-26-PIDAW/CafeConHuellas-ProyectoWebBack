@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -94,6 +95,25 @@ public class DonationController {
     @GetMapping("/user/{userId}")
     public List<DonationDTO> getDonationsByUser(@PathVariable Long userId) {
         return donationService.findByUserId(userId);
+    }
+
+    /**
+     * Devuelve las donaciones del usuario autenticado.
+     * <p>
+     * No requiere rol específico: cualquier usuario con un token válido
+     * puede consultar sus propias donaciones. El backend identifica al usuario
+     * a partir del email almacenado en el JWT (subject), nunca desde
+     * un parámetro enviado por el cliente.
+     * </p>
+     *
+     * @return lista de {@link DonationDTO} del usuario autenticado
+     */
+    @GetMapping("/me")
+    public List<DonationDTO> getMyDonations() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+        return donationService.findByUserEmail(email);
     }
 
     /**

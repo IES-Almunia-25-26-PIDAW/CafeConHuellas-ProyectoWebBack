@@ -168,6 +168,28 @@ class DonationServiceTest {
     }
 
     @Test
+    @DisplayName("Debe devolver las donaciones del usuario autenticado por su email")
+    void shouldFindDonationsByUserEmail() {
+        when(donationRepository.findByUserEmail("ana@test.com")).thenReturn(List.of(testDonation));
+        when(donationMapper.toDto(testDonation)).thenReturn(testDonationDTO);
+
+        List<DonationDTO> result = donationService.findByUserEmail("ana@test.com");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUserId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("Debe devolver lista vacía si el usuario no tiene donaciones")
+    void shouldReturnEmptyWhenUserHasNoDonationsByEmail() {
+        when(donationRepository.findByUserEmail("noexiste@test.com")).thenReturn(List.of());
+
+        List<DonationDTO> result = donationService.findByUserEmail("noexiste@test.com");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     @DisplayName("Debe lanzar excepción con una categoría de donación no válida")
     void shouldThrowExceptionForInvalidCategory() {
         assertThrows(BadRequestException.class,

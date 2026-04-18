@@ -28,6 +28,19 @@ public interface DonationRepository extends JpaRepository<Donation,Long> {
     List<Donation> findByUserId(Long userId);
 
     /**
+     * Devuelve todas las donaciones realizadas por el usuario con el email indicado.
+     * <p>
+     * Usado por {@code GET /api/donations/me} para que el usuario autenticado
+     * consulte únicamente sus propias donaciones. El email se extrae del JWT,
+     * nunca se acepta como parámetro del cliente.
+     * </p>
+     *
+     * @param email email del usuario autenticado
+     * @return lista de donaciones del usuario indicado
+     */
+    List<Donation> findByUserEmail(String email);
+
+    /**
      * Filtra las donaciones por su categoría.
      *
      * @param category categoría por la que filtrar ({@link DonationCategory})

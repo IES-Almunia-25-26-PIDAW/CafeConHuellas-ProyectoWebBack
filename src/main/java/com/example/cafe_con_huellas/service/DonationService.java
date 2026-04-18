@@ -119,6 +119,23 @@ public class DonationService {
     }
 
     /**
+     * Obtiene todas las donaciones del usuario autenticado identificado por su email.
+     * <p>
+     * El email se extrae del JWT en el controlador mediante {@code SecurityContextHolder},
+     * nunca se acepta como parámetro del cliente.
+     * </p>
+     *
+     * @param email email del usuario autenticado (subject del JWT)
+     * @return lista de {@link DonationDTO} del usuario indicado
+     */
+    @Transactional(readOnly = true)
+    public List<DonationDTO> findByUserEmail(String email) {
+        return donationRepository.findByUserEmail(email).stream()
+                .map(donationMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Filtra las donaciones por categoría.
      * <p>
      * Convierte el {@code String} recibido del frontend al enum {@link DonationCategory}.

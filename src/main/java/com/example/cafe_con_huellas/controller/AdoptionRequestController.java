@@ -6,6 +6,7 @@ import com.example.cafe_con_huellas.service.AdoptionRequestService;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,14 +26,43 @@ public class AdoptionRequestController {
     private final AdoptionRequestService requestService;
 
     /**
-     * Obtiene el listado completo de todas las solicitudes de adopción.
+     * Obtiene el listado de solicitudes de adopción.
+     * <p>
+     * Si se proporciona el parámetro {@code email}, devuelve únicamente las solicitudes
+     * del usuario con ese email. Si no se proporciona, devuelve todas las solicitudes.
+     * Solo accesible para administradores.
+     * </p>
      *
-     * @return lista de {@link AdoptionRequestDTO} con todos los registros
+     * @param email email del usuario por el que filtrar (opcional)
+     * @return lista de {@link AdoptionRequestDTO} con los registros encontrados
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<AdoptionRequestDTO> getAll() {
+    public List<AdoptionRequestDTO> getAll(
+            @RequestParam(required = false) String email) {
+        if (email != null && !email.isBlank()) {
+            return requestService.findByUserEmail(email);
+        }
         return requestService.findAll();
+    }
+
+    /**
+     * Devuelve las solicitudes de adopción del usuario autenticado.
+     * <p>
+     * No requiere rol específico: cualquier usuario con un token válido
+     * puede consultar sus propias solicitudes. El backend identifica al usuario
+     * a partir del email almacenado en el JWT (subject), nunca desde
+     * un parámetro enviado por el cliente.
+     * </p>
+     *
+     * @return lista de {@link AdoptionRequestDTO} del usuario autenticado
+     */
+    @GetMapping("/me")
+    public List<AdoptionRequestDTO> getMyRequests() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+        return requestService.findByUserEmail(email);
     }
 
     /**

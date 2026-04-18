@@ -14,6 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,10 +22,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Tests unitarios del servicio {@link FileStorageService}.
  * <p>
- * Verifica la lógica de almacenamiento de avatares en disco,
+ * Verifica la lógica de almacenamiento de imágenes en disco,
  * incluyendo validaciones de archivo vacío, tamaño máximo,
- * extensiones permitidas y content-type.
- * Cada test limpia los archivos creados en {@code uploads/avatars/}
+ * extensiones permitidas y content-type para avatares,
+ * imágenes de mascotas e imágenes de eventos.
+ * Cada test limpia los archivos creados en {@code uploads/}
  * para no dejar residuos en el sistema de archivos.
  * </p>
  */
@@ -34,8 +36,14 @@ class FileStorageServiceTest {
     @InjectMocks
     private FileStorageService fileStorageService;
 
-    /** Ruta de la carpeta de subida usada por el servicio. */
-    private static final Path UPLOAD_DIR = Paths.get("uploads/avatars");
+    /** Ruta de la carpeta de avatares. */
+    private static final Path AVATAR_DIR = Paths.get("uploads/avatars");
+
+    /** Ruta de la carpeta de imágenes de mascotas. */
+    private static final Path PET_DIR = Paths.get("uploads/pets");
+
+    /** Ruta de la carpeta de imágenes de eventos. */
+    private static final Path EVENT_DIR = Paths.get("uploads/events");
 
     /**
      * Inyecta manualmente el valor de {@code app.base-url} en el servicio,
@@ -49,30 +57,32 @@ class FileStorageServiceTest {
     }
 
     /**
-     * Limpia la carpeta de uploads después de cada test
+     * Limpia las carpetas de uploads después de cada test
      * para no dejar archivos residuales.
      */
     @AfterEach
     void cleanUp() throws IOException {
-        if (Files.exists(UPLOAD_DIR)) {
-            Files.walkFileTree(UPLOAD_DIR, new SimpleFileVisitor<>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    Files.delete(file);
-                    return FileVisitResult.CONTINUE;
-                }
+        for (Path dir : List.of(AVATAR_DIR, PET_DIR, EVENT_DIR)) {
+            if (Files.exists(dir)) {
+                Files.walkFileTree(dir, new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        Files.delete(file);
+                        return FileVisitResult.CONTINUE;
+                    }
 
-                @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    Files.delete(dir);
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-            // Limpiar también la carpeta padre "uploads" si queda vacía
-            Path uploadsDir = Paths.get("uploads");
-            if (Files.exists(uploadsDir) && Files.list(uploadsDir).findAny().isEmpty()) {
-                Files.delete(uploadsDir);
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                        Files.delete(dir);
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
             }
+        }
+        // Limpiar también la carpeta padre "uploads" si queda vacía
+        Path uploadsDir = Paths.get("uploads");
+        if (Files.exists(uploadsDir) && Files.list(uploadsDir).findAny().isEmpty()) {
+            Files.delete(uploadsDir);
         }
     }
 
@@ -95,7 +105,7 @@ class FileStorageServiceTest {
 
         // Verificar que el archivo existe físicamente en disco
         String fileName = result.replace("http://localhost:8087/uploads/avatars/", "");
-        assertThat(Files.exists(UPLOAD_DIR.resolve(fileName))).isTrue();
+        assertThat(Files.exists(AVATAR_DIR.resolve(fileName))).isTrue();
     }
 
     @Test
@@ -200,5 +210,109 @@ class FileStorageServiceTest {
         assertThatThrownBy(() -> fileStorageService.saveAvatar(file))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("El archivo no tiene extensión");
+    }
+
+    // -------------------- savePetImage --------------------
+
+    @Test
+    @DisplayName("Guarda imagen de mascota JPG correctamente y devuelve ruta pública")
+    void shouldSavePetImageSuccessfully() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "mascota.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "contenido imagen jpg".getBytes()
+        );
+
+        String result = fileStorageService.savePetImage(file);
+
+        assertThat(result).startsWith("http://localhost:8087/uploads/pets/");
+        assertThat(result).endsWith(".jpg");
+
+        // Verificar que el archivo existe físicamente en disco
+        String fileName = result.replace("http://localhost:8087/uploads/pets/", "");
+        assertThat(Files.exists(PET_DIR.resolve(fileName))).isTrue();
+    }
+
+    @Test
+    @DisplayName("savePetImage lanza BadRequestException si el archivo está vacío")
+    void shouldThrowWhenPetImageIsEmpty() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "vacio.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                new byte[0]
+        );
+
+        assertThatThrownBy(() -> fileStorageService.savePetImage(file))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("El archivo está vacío");
+    }
+
+    @Test
+    @DisplayName("savePetImage lanza BadRequestException si la extensión no está permitida")
+    void shouldThrowWhenPetImageExtensionNotAllowed() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "documento.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                "contenido".getBytes()
+        );
+
+        assertThatThrownBy(() -> fileStorageService.savePetImage(file))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Extensión no permitida");
+    }
+
+// -------------------- saveEventImage --------------------
+
+    @Test
+    @DisplayName("Guarda imagen de evento PNG correctamente y devuelve ruta pública")
+    void shouldSaveEventImageSuccessfully() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "evento.png",
+                MediaType.IMAGE_PNG_VALUE,
+                "contenido imagen png".getBytes()
+        );
+
+        String result = fileStorageService.saveEventImage(file);
+
+        assertThat(result).startsWith("http://localhost:8087/uploads/events/");
+        assertThat(result).endsWith(".png");
+
+        // Verificar que el archivo existe físicamente en disco
+        String fileName = result.replace("http://localhost:8087/uploads/events/", "");
+        assertThat(Files.exists(EVENT_DIR.resolve(fileName))).isTrue();
+    }
+
+    @Test
+    @DisplayName("saveEventImage lanza BadRequestException si el archivo está vacío")
+    void shouldThrowWhenEventImageIsEmpty() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "vacio.png",
+                MediaType.IMAGE_PNG_VALUE,
+                new byte[0]
+        );
+
+        assertThatThrownBy(() -> fileStorageService.saveEventImage(file))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("El archivo está vacío");
+    }
+
+    @Test
+    @DisplayName("saveEventImage lanza BadRequestException si la extensión no está permitida")
+    void shouldThrowWhenEventImageExtensionNotAllowed() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "documento.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                "contenido".getBytes()
+        );
+
+        assertThatThrownBy(() -> fileStorageService.saveEventImage(file))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Extensión no permitida");
     }
 }
