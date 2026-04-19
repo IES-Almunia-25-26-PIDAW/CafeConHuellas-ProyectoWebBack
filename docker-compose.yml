@@ -9,6 +9,8 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - cafe_con_huellas_network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -18,6 +20,8 @@ services:
   mailpit:
     image: axllent/mailpit:latest
     container_name: cafe_con_huellas_mail
+    networks:
+      - cafe_con_huellas_network
     ports:
       - "1025:1025"   # puerto SMTP (Spring lo usa para enviar)
       - "8025:8025"   # interfaz web para ver los emails
@@ -28,6 +32,8 @@ services:
     container_name: cafe_con_huellas_backend
     ports:
       - "8087:8087"
+    networks:
+      - cafe_con_huellas_network
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/animal_shelter_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
@@ -49,5 +55,10 @@ services:
 
 volumes:
   mysql_data:
+
+networks:
+  cafe_con_huellas_network:
+    name: cafe_con_huellas_network
+    driver: bridge
 
 
