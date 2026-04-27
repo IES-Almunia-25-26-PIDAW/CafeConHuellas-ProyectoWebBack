@@ -3,6 +3,7 @@ package com.example.cafe_con_huellas.controller;
 import com.example.cafe_con_huellas.config.SecurityConfig;
 import com.example.cafe_con_huellas.dto.PetDetailDTO;
 import com.example.cafe_con_huellas.mapper.PetMapperImpl;
+import com.example.cafe_con_huellas.model.entity.AdoptionStatus;
 import com.example.cafe_con_huellas.service.PetService;
 import com.example.cafe_con_huellas.security.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,6 +60,7 @@ class PetControllerTest {
                 .neutered(true)
                 .isPpp(false)
                 .urgentAdoption(false)
+                .adoptionStatus(AdoptionStatus.NO_ADOPTADO)
                 .imageUrl("https://example.com/firu.jpg")
                 .build();
     }
@@ -125,6 +127,28 @@ class PetControllerTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    @DisplayName("GET /api/pets/{id} devuelve adoptionStatus correcto")
+    @WithMockUser
+    void shouldReturnAdoptionStatus() throws Exception {
+        when(petService.findById(1L)).thenReturn(buildPetDetailDTO());
+
+        mockMvc.perform(get("/api/pets/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.adoptionStatus").value("NO_ADOPTADO"));
+    }
+
+    @Test
+    @DisplayName("GET /api/pets/filter/adoption-status devuelve mascotas filtradas")
+    @WithMockUser
+    void shouldGetPetsByAdoptionStatus() throws Exception {
+        when(petService.findByAdoptionStatus("NO_ADOPTADO")).thenAnswer(inv -> List.of(buildPetDetailDTO()));
+
+        mockMvc.perform(get("/api/pets/filter/adoption-status").param("status", "NO_ADOPTADO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].adoptionStatus").value("NO_ADOPTADO"));
+    }
+
     // -------------------- POST --------------------
 
     @Test
@@ -158,6 +182,19 @@ class PetControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(buildPetDetailDTO())))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("POST /api/pets sin adoptionStatus devuelve 400")
+    @WithMockUser(roles = "ADMIN")
+    void shouldReturn400WhenAdoptionStatusIsMissing() throws Exception {
+        PetDetailDTO dto = buildPetDetailDTO();
+        dto.setAdoptionStatus(null);
+
+        mockMvc.perform(post("/api/pets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest());
     }
 
     // -------------------- PUT --------------------
@@ -229,4 +266,6 @@ class PetControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].category").value("PERRO"));
     }
+
+
 }

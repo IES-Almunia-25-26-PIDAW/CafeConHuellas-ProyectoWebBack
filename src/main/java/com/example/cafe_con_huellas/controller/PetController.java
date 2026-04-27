@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * Controlador REST para la gestión del catálogo de mascotas.
  * <p>
- * Incluye CRUD completo y filtros por categoría y estado de esterilización.
+ * Incluye CRUD completo y filtros por categoría, estado de esterilización y estado de adopción.
  * La consulta es pública; el alta, edición y borrado requieren rol ADMIN.
  * </p>
  */
@@ -144,4 +144,20 @@ public class PetController {
                 .map((PetDetailDTO dto) -> petMapper.toSummaryDto(dto))
                 .toList();
     }
+
+    /**
+     * Filtra el catálogo de mascotas por su estado de adopción.
+     * Accesible públicamente para mostrar mascotas disponibles en el catálogo.
+     *
+     * @param status estado de adopción por el que filtrar (NO_ADOPTADO, EN_PROCESO, ADOPTADO)
+     * @return lista de {@link PetSummaryDTO} filtrada por estado de adopción
+     */
+    @GetMapping("/filter/adoption-status")
+    public List<PetSummaryDTO> getPetsByAdoptionStatus(@RequestParam String status) {
+        return petService.findByAdoptionStatus(status).stream()
+                .map((PetDetailDTO dto) -> petMapper.toSummaryDto(dto))
+                .toList();
+    }
+
+
 }

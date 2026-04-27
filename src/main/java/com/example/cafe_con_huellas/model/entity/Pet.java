@@ -71,6 +71,11 @@ public class Pet {
     @Column(name = "image_url")
     private String imageUrl;
 
+    /** Estado del proceso de adopción de la mascota. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "adoption_status", nullable = false)
+    private AdoptionStatus adoptionStatus;
+
 
     /**
      * Relación con la galería de imágenes adicionales de la mascota.

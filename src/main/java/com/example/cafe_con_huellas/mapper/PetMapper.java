@@ -55,6 +55,7 @@ public interface PetMapper {
         pet.setIsPpp(dto.getIsPpp());
         pet.setUrgentAdoption(dto.getUrgentAdoption());
         pet.setImageUrl(dto.getImageUrl());
+        pet.setAdoptionStatus(dto.getAdoptionStatus());
         return pet;
     }
 

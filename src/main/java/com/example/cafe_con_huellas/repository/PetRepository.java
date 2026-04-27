@@ -1,5 +1,6 @@
 package com.example.cafe_con_huellas.repository;
 
+import com.example.cafe_con_huellas.model.entity.AdoptionStatus;
 import com.example.cafe_con_huellas.model.entity.Pet;
 import com.example.cafe_con_huellas.model.entity.PetCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -48,6 +49,14 @@ public interface PetRepository extends JpaRepository<Pet, Long> {
      * @return lista de mascotas con el estado de urgencia indicado
      */
     List<Pet> findByUrgentAdoption(Boolean urgentAdoption);
+
+    /**
+     * Filtra las mascotas por su estado de adopción.
+     *
+     * @param adoptionStatus estado de adopción por el que filtrar ({@link AdoptionStatus})
+     * @return lista de mascotas con el estado de adopción indicado
+     */
+    List<Pet> findByAdoptionStatus(AdoptionStatus adoptionStatus);
 
     /**
      * Filtra las mascotas cuya edad sea igual o inferior a la indicada.

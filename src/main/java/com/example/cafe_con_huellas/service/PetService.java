@@ -4,6 +4,7 @@ import com.example.cafe_con_huellas.dto.PetDetailDTO;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.mapper.PetMapper;
+import com.example.cafe_con_huellas.model.entity.AdoptionStatus;
 import com.example.cafe_con_huellas.model.entity.Pet;
 import com.example.cafe_con_huellas.model.entity.PetCategory;
 import com.example.cafe_con_huellas.repository.PetRepository;
@@ -150,6 +151,27 @@ public class PetService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Filtra las mascotas por su estado de adopción.
+     * Lanza excepción si el estado indicado no es válido.
+     *
+     * @param status nombre del estado de adopción en texto (NO_ADOPTADO, EN_PROCESO, ADOPTADO)
+     * @return lista de {@link PetDetailDTO} con el estado indicado
+     * @throws BadRequestException si el estado no corresponde a ningún valor válido
+     */
+    @Transactional(readOnly = true)
+    public List<PetDetailDTO> findByAdoptionStatus(String status) {
+        try {
+            AdoptionStatus adoptionStatus = AdoptionStatus.valueOf(status.toUpperCase());
+            return petRepository.findByAdoptionStatus(adoptionStatus)
+                    .stream()
+                    .map(petMapper::toDetailDto)
+                    .toList();
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Estado de adopción inválido: " + status);
+        }
+    }
+
     // ---------- ACTUALIZACIÓN CONTROLADA ----------
 
     /**
@@ -180,9 +202,11 @@ public class PetService {
         pet.setIsPpp(dto.getIsPpp());
         pet.setUrgentAdoption(dto.getUrgentAdoption());
         pet.setCategory(PetCategory.valueOf(dto.getCategory().toUpperCase()));
+        pet.setAdoptionStatus(dto.getAdoptionStatus());
 
         // La imagen principal también es editable
         pet.setImageUrl(dto.getImageUrl());
+
 
         return petMapper.toDetailDto(petRepository.save(pet));
     }

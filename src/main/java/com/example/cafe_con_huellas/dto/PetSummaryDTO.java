@@ -1,5 +1,6 @@
 package com.example.cafe_con_huellas.dto;
 
+import com.example.cafe_con_huellas.model.entity.AdoptionStatus;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -63,6 +64,10 @@ public class PetSummaryDTO {
     /** Indica si la adopción de esta mascota es urgente. */
     @NotNull(message = "Indica si la adopción es urgente")
     private Boolean urgentAdoption;
+
+    /** Estado del proceso de adopción de la mascota. */
+    @NotNull(message = "Indica si la adopción es urgente")
+    private AdoptionStatus adoptionStatus;
 
     /** URL de la imagen principal de la mascota. */
     @NotBlank(message = "La imagen principal es obligatoria")

@@ -4,6 +4,7 @@ import com.example.cafe_con_huellas.dto.PetDetailDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.mapper.PetMapper;
+import com.example.cafe_con_huellas.model.entity.AdoptionStatus;
 import com.example.cafe_con_huellas.model.entity.Pet;
 import com.example.cafe_con_huellas.model.entity.PetCategory;
 import com.example.cafe_con_huellas.repository.PetRepository;
@@ -46,6 +47,7 @@ class PetServiceTest {
         testPet.setBreed("Labrador");
         testPet.setUrgentAdoption(false);
         testPet.setCategory(PetCategory.PERRO);
+        testPet.setAdoptionStatus(AdoptionStatus.NO_ADOPTADO);
 
         testPetDetailDTO = new PetDetailDTO();
         testPetDetailDTO.setId(1L);
@@ -53,6 +55,7 @@ class PetServiceTest {
         testPetDetailDTO.setBreed("Labrador");
         testPetDetailDTO.setUrgentAdoption(false);
         testPetDetailDTO.setCategory("PERRO");
+        testPetDetailDTO.setAdoptionStatus(AdoptionStatus.NO_ADOPTADO);
     }
 
     @Test
@@ -150,5 +153,35 @@ class PetServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> petService.deleteById(99L));
 
         verify(petRepository, never()).deleteById(any());
+    }
+
+    @Test
+    @DisplayName("Debe guardar una mascota con el adoptionStatus correcto")
+    void shouldSavePetWithAdoptionStatus() {
+        when(petMapper.toEntity(testPetDetailDTO)).thenReturn(testPet);
+        when(petRepository.save(any(Pet.class))).thenReturn(testPet);
+        when(petMapper.toDetailDto(testPet)).thenReturn(testPetDetailDTO);
+
+        PetDetailDTO result = petService.save(testPetDetailDTO);
+
+        assertThat(result.getAdoptionStatus()).isEqualTo(AdoptionStatus.NO_ADOPTADO);
+    }
+
+    @Test
+    @DisplayName("Debe filtrar mascotas por estado de adopción válido")
+    void shouldFindPetsByAdoptionStatus() {
+        when(petRepository.findByAdoptionStatus(AdoptionStatus.NO_ADOPTADO)).thenReturn(List.of(testPet));
+        when(petMapper.toDetailDto(testPet)).thenReturn(testPetDetailDTO);
+
+        List<PetDetailDTO> result = petService.findByAdoptionStatus("NO_ADOPTADO");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getAdoptionStatus()).isEqualTo(AdoptionStatus.NO_ADOPTADO);
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción con un estado de adopción no válido")
+    void shouldThrowExceptionForInvalidAdoptionStatus() {
+        assertThrows(BadRequestException.class, () -> petService.findByAdoptionStatus("INVENTADO"));
     }
 }

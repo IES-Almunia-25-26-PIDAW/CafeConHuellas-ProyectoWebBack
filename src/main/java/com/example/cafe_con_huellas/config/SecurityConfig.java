@@ -111,7 +111,7 @@ public class SecurityConfig {
      * <ul>
      *   <li>CSRF desactivado al usar JWT en lugar de sesiones.</li>
      *   <li>Política de sesiones sin estado: cada petición debe incluir su propio token.</li>
-     *   <li>Rutas públicas: {@code /api/auth/**}, formulario de adopción, documentación Swagger y subida de avatar.</li>
+     *   <li>Rutas públicas: {@code /api/auth/**}, formulario de adopción, documentación Swagger, Scalar y subida de avatar.</li>
      *   <li>Subida de imágenes de mascotas y eventos: protegidas por {@code @PreAuthorize("hasRole('ADMIN')")}.</li>
      *   <li>El resto de rutas requieren autenticación.</li>
      *   <li>El filtro {@link JwtAuthFilter} se ejecuta antes del filtro estándar de Spring.</li>

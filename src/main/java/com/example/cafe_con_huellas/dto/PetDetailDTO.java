@@ -1,5 +1,6 @@
 package com.example.cafe_con_huellas.dto;
 
+import com.example.cafe_con_huellas.model.entity.AdoptionStatus;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,7 +42,7 @@ public class PetDetailDTO {
     private String breed;
 
     /** Categoría del animal (PERRO o GATO). */
-    @NotBlank(message = "La categoría (PERRO, GATO, etc.) es obligatoria")
+    @NotBlank(message = "La categoría (PERRO o GATO) es obligatoria")
     private String category;
 
     /** Edad de la mascota en años. Entre 0 y 20. */
@@ -67,6 +68,10 @@ public class PetDetailDTO {
     /** Indica si la adopción de esta mascota es urgente. */
     @NotNull(message = "Indica si la adopción es urgente")
     private Boolean urgentAdoption;
+
+    /** Estado del proceso de adopción. Valores posibles: NO_ADOPTADO, EN_PROCESO, ADOPTADO. */
+    @NotNull(message = "El estado de adopción es obligatorio")
+    private AdoptionStatus adoptionStatus;
 
     /** URL de la imagen principal de la mascota. Debe ser una URL válida. (Portada) */
     @NotBlank(message = "La imagen principal de la mascota es obligatoria")

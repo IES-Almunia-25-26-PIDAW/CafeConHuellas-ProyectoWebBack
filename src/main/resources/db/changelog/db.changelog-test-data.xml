@@ -233,4 +233,18 @@
         </insert>
     </changeSet>
 
+    <!-- ============================================================ -->
+    <!-- Changeset 17: Actualizar adoption_status en mascotas de prueba -->
+    <!-- ============================================================ -->
+    <changeSet id="17" author="ana">
+        <update tableName="Pet">
+            <column name="adoption_status" value="ADOPTADO"/>
+            <where>name = 'Max'</where>
+        </update>
+        <update tableName="Pet">
+            <column name="adoption_status" value="EN_PROCESO"/>
+            <where>name = 'Rocky'</where>
+        </update>
+    </changeSet>
+
 </databaseChangeLog>

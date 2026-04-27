@@ -414,6 +414,19 @@
         </addColumn>
     </changeSet>
 
+    <!-- ============================================================ -->
+    <!-- Changeset 14: Añadir campo adoption_status a la tabla Pet   -->
+    <!-- ============================================================ -->
+    <changeSet id="14" author="ana">
+        <addColumn tableName="Pet">
+            <column name="adoption_status"
+                    type="ENUM('NO_ADOPTADO', 'EN_PROCESO', 'ADOPTADO')"
+                    defaultValue="NO_ADOPTADO">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
     <include file="db/changelog/db.changelog-test-data.xml"/>
 
 </databaseChangeLog>

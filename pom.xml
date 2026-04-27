@@ -72,6 +72,7 @@
             <version>${org.mapstruct.version}</version>
         </dependency>
 
+        <!-- Swagger UI - para desarrollo y pruebas  -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>

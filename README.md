@@ -19,7 +19,7 @@ El sistema distingue dos tipos de usuarios:
 ### 🐶 Gestión de mascotas
 - Catálogo completo con ficha detallada de cada animal (nombre, raza, edad, peso, descripción, estado de esterilización...)
 - Galería de imágenes por mascota
-- Filtros por categoría (perro/gato) y por estado de esterilización
+- Filtros por categoría (perro/gato), estado de esterilización y estado de adopción (disponible, en proceso, adoptado)
 - Historial de vacunas por mascota
 
 ### 📋 Proceso de adopción
@@ -214,7 +214,7 @@ automáticamente datos de prueba en la base de datos.
 | USER  | maria@example.com        | User1234!   |
 
 ### Datos incluidos
-- 8 mascotas (5 perros y 3 gatos)
+- 8 mascotas (5 perros y 3 gatos) con distintos estados de adopción
 - 6 eventos (4 programados, 2 finalizados)
 
 ### Cómo obtener el token para probar la API
