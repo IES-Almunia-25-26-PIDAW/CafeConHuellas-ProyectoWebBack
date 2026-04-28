@@ -27,6 +27,7 @@ El sistema distingue dos tipos de usuarios:
 - El usuario rellena el formulario desde el enlace sin necesidad de estar registrado
 - Al enviar el formulario, se notifica automáticamente al admin y se confirma la recepción al usuario por email
 - El admin puede revisar, aprobar o rechazar las solicitudes y registrar los detalles post-adopción
+- Al crear la relación de tipo ADOPCION, el sistema vincula automáticamente la solicitud aprobada con dicha relación, permitiendo al administrador consultar el formulario original desde el historial de relaciones
 
 ### 💰 Donaciones
 - Los usuarios pueden registrar donaciones económicas
@@ -39,7 +40,6 @@ El sistema distingue dos tipos de usuarios:
 ### 👥 Usuarios
 - Registro y login con JWT
 - Gestión de perfiles por parte del admin
-- Los usuarios pueden guardar mascotas como favoritas
 
 ---
 
@@ -325,9 +325,8 @@ La API usa **JWT Bearer Token**. El flujo es:
 | `PetImage` | Fotos adicionales de una mascota. Relación **N:1** con `Pet`. |
 | `PetVaccine` | Registro de vacunas aplicadas a una mascota con fecha. |
 | `UserPetRelationship` | Vínculo formal entre un usuario y una mascota (adopción, acogida...). |
-| `UserPetFavorite` | Lista de mascotas marcadas como favoritas por un usuario. |
 | `AdoptionFormToken` | Token único y temporal (48h) para acceder al formulario de adopción. |
-| `AdoptionRequest` | Formulario rellenado por el usuario con sus datos. |
+| `AdoptionRequest` | Formulario rellenado por el usuario con sus datos. Se vincula con la `UserPetRelationship` generada al aprobar la solicitud. |
 | `AdoptionDetail` | Detalles registrados por el admin tras formalizar la adopción. |
 
 ---
