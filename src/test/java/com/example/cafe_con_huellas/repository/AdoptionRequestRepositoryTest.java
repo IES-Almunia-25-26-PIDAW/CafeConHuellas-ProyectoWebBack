@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +30,9 @@ class AdoptionRequestRepositoryTest {
 
     @Autowired
     private PetRepository petRepository;
+
+    @Autowired
+    private UserPetRelationshipRepository relationshipRepository;
 
     private AdoptionFormToken formToken;
 
@@ -139,5 +143,46 @@ class AdoptionRequestRepositoryTest {
         Optional<AdoptionRequest> result = requestRepository.findByFormTokenId(999L);
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("findByRelationshipId() devuelve la solicitud vinculada a esa relación")
+    void shouldFindByRelationshipId() {
+        // Creamos y guardamos una UserPetRelationship
+        UserPetRelationship relationship = new UserPetRelationship();
+        relationship.setUser(formToken.getUser());
+        relationship.setPet(formToken.getPet());
+        relationship.setRelationshipType(RelationshipType.ADOPCION);
+        relationship.setStartDate(LocalDate.now());
+        relationship.setActive(true);
+        relationship = relationshipRepository.save(relationship);
+
+        // Vinculamos la solicitud con la relación
+        AdoptionRequest request = requestRepository.findByFormTokenId(formToken.getId()).get();
+        request.setRelationship(relationship);
+        requestRepository.save(request);
+
+        Optional<AdoptionRequest> result = requestRepository.findByRelationshipId(relationship.getId());
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getCity()).isEqualTo("Jerez");
+    }
+
+    @Test
+    @DisplayName("findByFormToken_UserIdAndFormToken_PetIdAndStatus() devuelve la solicitud aprobada")
+    void shouldFindByUserIdAndPetIdAndStatus() {
+        // Cambiamos el estado a APROBADA
+        AdoptionRequest request = requestRepository.findByFormTokenId(formToken.getId()).get();
+        request.setStatus(AdoptionRequestStatus.APROBADA);
+        requestRepository.save(request);
+
+        Optional<AdoptionRequest> result = requestRepository
+                .findByFormToken_UserIdAndFormToken_PetIdAndStatus(
+                        formToken.getUser().getId(),
+                        formToken.getPet().getId(),
+                        AdoptionRequestStatus.APROBADA);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getStatus()).isEqualTo(AdoptionRequestStatus.APROBADA);
     }
 }

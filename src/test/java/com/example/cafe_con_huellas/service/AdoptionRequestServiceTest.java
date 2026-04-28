@@ -219,4 +219,28 @@ class AdoptionRequestServiceTest {
         assertThatThrownBy(() -> requestService.updateStatus(99L, AdoptionRequestStatus.APROBADA))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
+
+    // -------------------- findByRelationshipId --------------------
+
+    @Test
+    @DisplayName("findByRelationshipId() devuelve el DTO cuando existe la solicitud vinculada")
+    void shouldReturnRequestByRelationshipId() {
+        when(requestRepository.findByRelationshipId(1L)).thenReturn(Optional.of(adoptionRequest));
+        when(requestMapper.toDto(any())).thenReturn(adoptionRequestDTO);
+
+        AdoptionRequestDTO result = requestService.findByRelationshipId(1L);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("findByRelationshipId() lanza ResourceNotFoundException si no existe solicitud para esa relación")
+    void shouldThrowWhenNoRequestForRelationship() {
+        when(requestRepository.findByRelationshipId(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> requestService.findByRelationshipId(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
 }

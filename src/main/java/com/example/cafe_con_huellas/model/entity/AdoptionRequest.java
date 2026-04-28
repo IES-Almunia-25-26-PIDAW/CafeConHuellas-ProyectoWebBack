@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
  * <p>
  * Recoge información sobre la vivienda, convivencia, experiencia con animales
  * y motivación del solicitante. Se vincula 1:1 con el {@link AdoptionFormToken}
- * que le dio acceso al formulario.
+ * que le dio acceso al formulario, y opcionalmente con la {@link UserPetRelationship}
+ * generada cuando el administrador aprueba la solicitud.
  * Mapea a la tabla {@code Adoption_Request}.
  * </p>
  */
@@ -87,6 +88,15 @@ public class AdoptionRequest {
     /** Campo libre para información adicional que el solicitante quiera aportar. */
     @Column(name = "additional_info", columnDefinition = "TEXT")
     private String additionalInfo;
+
+    /**
+     * Relación usuario-mascota que se generó al aprobar esta solicitud.
+     * Es nullable porque se vincula después de la aprobación,
+     * no en el momento de enviar el formulario.
+     */
+    @OneToOne
+    @JoinColumn(name = "user_pet_relationship_id")
+    private UserPetRelationship relationship;
 
     /**
      * Estado actual de la solicitud.

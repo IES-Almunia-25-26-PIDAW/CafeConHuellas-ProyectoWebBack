@@ -28,12 +28,13 @@ public interface AdoptionRequestMapper {
     @Mapping(source = "formToken.user.firstName", target = "userName")
     @Mapping(source = "formToken.user.email", target = "userEmail")
     @Mapping(source = "formToken.pet.name", target = "petName")
+    @Mapping(source = "relationship.id", target = "relationshipId") // mapea el ID de la relación vinculada
     AdoptionRequestDTO toDto(AdoptionRequest entity);
 
     /**
      * Convierte un {@link AdoptionRequestDTO} a su entidad.
-     * Los campos {@code formToken}, {@code status} y {@code submittedAt}
-     * se ignoran y se asignan en el servicio.
+     * Los campos {@code formToken}, {@code status}, {@code submittedAt}
+     * y {@code relationship} se ignoran y se asignan en el servicio.
      *
      * @param dto DTO a convertir
      * @return {@link AdoptionRequest} con los datos mapeados
@@ -41,5 +42,6 @@ public interface AdoptionRequestMapper {
     @Mapping(target = "formToken", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "submittedAt", ignore = true)
+    @Mapping(target = "relationship", ignore = true) // se asigna en el servicio al aprobar la solicitud
     AdoptionRequest toEntity(AdoptionRequestDTO dto);
 }

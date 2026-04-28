@@ -175,6 +175,29 @@ class AdoptionRequestControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    // -------------------- GET /api/adoption-requests/relationship/{relationshipId} --------------------
+
+    @Test
+    @DisplayName("GET /api/adoption-requests/relationship/{relationshipId} con ADMIN devuelve la solicitud")
+    @WithMockUser(roles = "ADMIN")
+    void shouldReturnRequestByRelationshipId() throws Exception {
+        when(requestService.findByRelationshipId(1L)).thenReturn(dto);
+
+        mockMvc.perform(get("/api/adoption-requests/relationship/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.userName").value("María García"));
+    }
+
+    @Test
+    @DisplayName("GET /api/adoption-requests/relationship/{relationshipId} sin ADMIN devuelve 403")
+    @WithMockUser(roles = "USER")
+    void shouldReturn403WhenGetByRelationshipIdAsUser() throws Exception {
+        mockMvc.perform(get("/api/adoption-requests/relationship/1"))
+                .andExpect(status().isForbidden());
+    }
+
+
     // -------------------- PATCH /api/adoption-requests/{id}/status --------------------
 
     @Test

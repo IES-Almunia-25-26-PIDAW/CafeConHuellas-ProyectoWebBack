@@ -427,6 +427,37 @@
         </addColumn>
     </changeSet>
 
+    <!-- ============================================================ -->
+    <!-- Changeset 15: Eliminar tabla User_Pet_Favorites              -->
+    <!-- Se elimina la funcionalidad de mascotas favoritas            -->
+    <!-- ============================================================ -->
+    <changeSet id="15" author="ana">
+        <dropForeignKeyConstraint baseTableName="User_Pet_Favorites" constraintName="fk_favorites_user"/>
+        <dropForeignKeyConstraint baseTableName="User_Pet_Favorites" constraintName="fk_favorites_pet"/>
+        <dropTable tableName="User_Pet_Favorites"/>
+    </changeSet>
+
+    <!-- ============================================================ -->
+    <!-- Changeset 16: Añadir FK de User_Pet_Relationship en          -->
+    <!--               Adoption_Request para vincular el formulario   -->
+    <!--               de adopción con la relación que generó         -->
+    <!-- ============================================================ -->
+    <changeSet id="16" author="ana">
+        <addColumn tableName="Adoption_Request">
+            <column name="user_pet_relationship_id" type="BIGINT">
+                <!-- Nullable: se rellena cuando el admin aprueba      -->
+                <!-- la solicitud y crea la UserPetRelationship        -->
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addForeignKeyConstraint
+                baseTableName="Adoption_Request"
+                baseColumnNames="user_pet_relationship_id"
+                referencedTableName="User_Pet_Relationship"
+                referencedColumnNames="id"
+                constraintName="fk_adoption_request_relationship"/>
+    </changeSet>
+
     <include file="db/changelog/db.changelog-test-data.xml"/>
 
 </databaseChangeLog>

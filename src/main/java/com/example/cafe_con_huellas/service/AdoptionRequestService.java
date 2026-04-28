@@ -126,4 +126,21 @@ public class AdoptionRequestService {
         request.setStatus(newStatus);
         return requestMapper.toDto(requestRepository.save(request));
     }
+
+    /**
+     * Busca la solicitud de adopción vinculada a una relación usuario-mascota concreta.
+     * Usado por el administrador para consultar el formulario original
+     * a partir del ID de la relación que generó la adopción.
+     *
+     * @param relationshipId identificador de la relación usuario-mascota
+     * @return {@link AdoptionRequestDTO} con los datos de la solicitud
+     * @throws ResourceNotFoundException si no existe solicitud vinculada a esa relación
+     */
+    @Transactional(readOnly = true)
+    public AdoptionRequestDTO findByRelationshipId(Long relationshipId) {
+        return requestRepository.findByRelationshipId(relationshipId)
+                .map(requestMapper::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontró solicitud de adopción para la relación con ID: " + relationshipId));
+    }
 }

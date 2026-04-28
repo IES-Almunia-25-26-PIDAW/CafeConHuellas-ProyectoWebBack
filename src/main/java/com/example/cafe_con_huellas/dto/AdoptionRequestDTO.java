@@ -86,6 +86,12 @@ public class AdoptionRequestDTO {
     @Size(max = 2000)
     private String additionalInfo;
 
+    /**
+     * Identificador de la relación usuario-mascota vinculada a esta solicitud.
+     * Null hasta que el admin aprueba la solicitud y crea la relación.
+     */
+    private Long relationshipId;
+
     /** Estado actual de la solicitud (PENDIENTE, APROBADA, DENEGADA). Solo lectura. */
     private AdoptionRequestStatus status;
 

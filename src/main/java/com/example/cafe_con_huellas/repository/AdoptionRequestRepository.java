@@ -66,4 +66,27 @@ public interface AdoptionRequestRepository extends JpaRepository<AdoptionRequest
      * @return lista de solicitudes de ese usuario
      */
     List<AdoptionRequest> findByFormTokenUserEmail(String email);
+
+    /**
+     * Busca la solicitud de adopción vinculada a una relación usuario-mascota concreta.
+     * Usado por el administrador para consultar el formulario original
+     * a partir del ID de la relación que generó la adopción.
+     *
+     * @param relationshipId identificador de la relación usuario-mascota
+     * @return {@link Optional} con la solicitud si existe
+     */
+    Optional<AdoptionRequest> findByRelationshipId(Long relationshipId);
+
+    /**
+     * Busca la solicitud de adopción aprobada para un usuario y mascota concretos.
+     * Usado al crear una UserPetRelationship de tipo ADOPCION para vincularla
+     * con el formulario que inició el proceso.
+     *
+     * @param userId identificador del usuario
+     * @param petId  identificador de la mascota
+     * @param status estado de la solicitud a buscar
+     * @return {@link Optional} con la solicitud si existe
+     */
+    Optional<AdoptionRequest> findByFormToken_UserIdAndFormToken_PetIdAndStatus(
+            Long userId, Long petId, AdoptionRequestStatus status);
 }

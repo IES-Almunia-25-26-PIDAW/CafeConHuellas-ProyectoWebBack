@@ -4,13 +4,12 @@ import com.example.cafe_con_huellas.dto.UserPetRelationshipDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.mapper.UserPetRelationshipMapper;
-import com.example.cafe_con_huellas.model.entity.Pet;
-import com.example.cafe_con_huellas.model.entity.RelationshipType;
-import com.example.cafe_con_huellas.model.entity.User;
-import com.example.cafe_con_huellas.model.entity.UserPetRelationship;
+import com.example.cafe_con_huellas.model.entity.*;
+import com.example.cafe_con_huellas.repository.AdoptionRequestRepository;
 import com.example.cafe_con_huellas.repository.PetRepository;
 import com.example.cafe_con_huellas.repository.UserPetRelationshipRepository;
 import com.example.cafe_con_huellas.repository.UserRepository;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +42,9 @@ class UserPetRelationshipServiceTest {
 
     @Mock
     private UserPetRelationshipMapper relationshipMapper;
+
+    @Mock
+    private AdoptionRequestRepository adoptionRequestRepository;
 
     @InjectMocks
     private UserPetRelationshipService relationshipService;
@@ -282,4 +284,56 @@ class UserPetRelationshipServiceTest {
 
         verify(relationshipRepository, never()).save(any());
     }
+
+    // -------------------- save ADOPCION --------------------
+
+    @Test
+    @DisplayName("save() con tipo ADOPCION vincula la AdoptionRequest aprobada")
+    void shouldLinkAdoptionRequestWhenSavingAdopcion() {
+        // Preparamos el DTO como ADOPCION
+        testRelationshipDTO.setRelationshipType("ADOPCION");
+
+        AdoptionRequest adoptionRequest = new AdoptionRequest();
+        adoptionRequest.setId(1L);
+        adoptionRequest.setStatus(AdoptionRequestStatus.APROBADA);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(petRepository.findById(1L)).thenReturn(Optional.of(testPet));
+        when(relationshipRepository.findByPetId(1L)).thenReturn(Collections.emptyList());
+        when(relationshipMapper.toEntity(testRelationshipDTO)).thenReturn(testRelationship);
+        when(relationshipRepository.save(any())).thenReturn(testRelationship);
+        when(relationshipMapper.toDto(testRelationship)).thenReturn(testRelationshipDTO);
+        when(adoptionRequestRepository.findByFormToken_UserIdAndFormToken_PetIdAndStatus(
+                1L, 1L, AdoptionRequestStatus.APROBADA))
+                .thenReturn(Optional.of(adoptionRequest));
+
+        relationshipService.save(testRelationshipDTO);
+
+        // Verificamos que se guardó la solicitud con la relación vinculada
+        verify(adoptionRequestRepository).save(adoptionRequest);
+        assertThat(adoptionRequest.getRelationship()).isEqualTo(testRelationship);
+    }
+
+    @Test
+    @DisplayName("save() con tipo ADOPCION no falla si no hay AdoptionRequest aprobada")
+    void shouldNotFailWhenNoApprovedAdoptionRequest() {
+        testRelationshipDTO.setRelationshipType("ADOPCION");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(petRepository.findById(1L)).thenReturn(Optional.of(testPet));
+        when(relationshipRepository.findByPetId(1L)).thenReturn(Collections.emptyList());
+        when(relationshipMapper.toEntity(testRelationshipDTO)).thenReturn(testRelationship);
+        when(relationshipRepository.save(any())).thenReturn(testRelationship);
+        when(relationshipMapper.toDto(testRelationship)).thenReturn(testRelationshipDTO);
+        when(adoptionRequestRepository.findByFormToken_UserIdAndFormToken_PetIdAndStatus(
+                1L, 1L, AdoptionRequestStatus.APROBADA))
+                .thenReturn(Optional.empty());
+
+        // No debe lanzar excepción aunque no haya solicitud aprobada
+        assertThatNoException().isThrownBy(() -> relationshipService.save(testRelationshipDTO));
+
+        // Verificamos que no se intentó guardar ninguna solicitud
+        verify(adoptionRequestRepository, never()).save(any());
+    }
+
 }

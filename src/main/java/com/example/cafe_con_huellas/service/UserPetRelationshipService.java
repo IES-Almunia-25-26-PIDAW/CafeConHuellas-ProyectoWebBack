@@ -4,8 +4,10 @@ import com.example.cafe_con_huellas.dto.UserPetRelationshipDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.mapper.UserPetRelationshipMapper;
+import com.example.cafe_con_huellas.model.entity.AdoptionRequestStatus;
 import com.example.cafe_con_huellas.model.entity.RelationshipType;
 import com.example.cafe_con_huellas.model.entity.UserPetRelationship;
+import com.example.cafe_con_huellas.repository.AdoptionRequestRepository;
 import com.example.cafe_con_huellas.repository.PetRepository;
 import com.example.cafe_con_huellas.repository.UserPetRelationshipRepository;
 import com.example.cafe_con_huellas.repository.UserRepository;
@@ -32,6 +34,7 @@ public class UserPetRelationshipService {
     private final UserRepository userRepository;
     private final PetRepository petRepository;
     private final UserPetRelationshipMapper relationshipMapper;
+    private final AdoptionRequestRepository adoptionRequestRepository;
 
     // ---------- CRUD BÁSICO ----------
 
@@ -113,7 +116,20 @@ public class UserPetRelationshipService {
             relationship.setStartDate(LocalDate.now());
         }
 
-        return relationshipMapper.toDto(relationshipRepository.save(relationship));
+        UserPetRelationship savedRelationship = relationshipRepository.save(relationship);
+
+        // 4. Si es ADOPCION, vincular la AdoptionRequest APROBADA con esta relación
+        if (newType == RelationshipType.ADOPCION) {
+            adoptionRequestRepository
+                    .findByFormToken_UserIdAndFormToken_PetIdAndStatus(
+                            dto.getUserId(), dto.getPetId(), AdoptionRequestStatus.APROBADA)
+                    .ifPresent(request -> {
+                        request.setRelationship(savedRelationship);
+                        adoptionRequestRepository.save(request);
+                    });
+        }
+
+        return relationshipMapper.toDto(savedRelationship);
     }
 
     /**

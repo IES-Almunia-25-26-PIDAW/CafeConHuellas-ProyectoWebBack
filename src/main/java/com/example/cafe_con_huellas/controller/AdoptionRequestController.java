@@ -104,4 +104,19 @@ public class AdoptionRequestController {
             @RequestParam AdoptionRequestStatus status) {
         return requestService.updateStatus(id, status);
     }
+
+    /**
+     * Obtiene la solicitud de adopción vinculada a una relación usuario-mascota concreta.
+     * Permite al administrador consultar el formulario original que dio lugar
+     * a una relación de tipo ADOPCION.
+     *
+     * @param relationshipId identificador de la relación usuario-mascota
+     * @return {@link AdoptionRequestDTO} con los datos de la solicitud
+     * @throws ResourceNotFoundException si no existe solicitud vinculada a esa relación
+     */
+    @GetMapping("/relationship/{relationshipId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public AdoptionRequestDTO getByRelationshipId(@PathVariable Long relationshipId) {
+        return requestService.findByRelationshipId(relationshipId);
+    }
 }
