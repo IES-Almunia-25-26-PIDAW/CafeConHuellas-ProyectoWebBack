@@ -35,6 +35,7 @@ public class UserPetRelationshipService {
     private final PetRepository petRepository;
     private final UserPetRelationshipMapper relationshipMapper;
     private final AdoptionRequestRepository adoptionRequestRepository;
+    private final EmailService emailService;
 
     // ---------- CRUD BÁSICO ----------
 
@@ -133,6 +134,58 @@ public class UserPetRelationshipService {
     }
 
     /**
+     * Actualiza los datos de un vínculo existente.
+     * <p>
+     * Si el campo {@code active} cambia respecto al estado anterior, se envía
+     * automáticamente un email al usuario notificándole la decisión:
+     * <ul>
+     *   <li>Si pasa a {@code true} → email de aceptación.</li>
+     *   <li>Si pasa a {@code false} → email de rechazo o cierre.</li>
+     * </ul>
+     * Aplica para todos los tipos de relación (adopción, acogida, paseo, etc.).
+     * </p>
+     *
+     * @param id  identificador del vínculo a actualizar
+     * @param dto nuevos datos del vínculo
+     * @return {@link UserPetRelationshipDTO} con los datos actualizados
+     * @throws ResourceNotFoundException si no existe el vínculo con ese ID
+     */
+    @Transactional
+    public UserPetRelationshipDTO update(Long id, UserPetRelationshipDTO dto) {
+        UserPetRelationship existing = relationshipRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Relación no encontrada con ID: " + id));
+
+        // Guardamos el estado anterior de active para detectar si ha cambiado
+        boolean wasActive = existing.getActive();
+        boolean isNowActive = dto.getActive();
+
+        // Actualizamos los campos permitidos
+        existing.setActive(isNowActive);
+        existing.setEndDate(dto.getEndDate());
+        existing.setStartDate(dto.getStartDate());
+        existing.setRelationshipType(RelationshipType.valueOf(dto.getRelationshipType().toUpperCase()));
+
+        relationshipRepository.save(existing);
+
+        // Si el campo active ha cambiado, notificamos al usuario por email
+        if (wasActive != isNowActive) {
+            String userEmail = existing.getUser().getEmail();
+            String userName  = existing.getUser().getFirstName() + " " + existing.getUser().getLastName1();
+            String petName   = existing.getPet().getName();
+            String type      = existing.getRelationshipType().name();
+
+            if (isNowActive) {
+                emailService.notifyRelationshipAccepted(userEmail, userName, petName, type);
+            } else {
+                emailService.notifyRelationshipRejected(userEmail, userName, petName, type);
+            }
+        }
+
+        return relationshipMapper.toDto(existing);
+    }
+
+
+    /**
      * Elimina un vínculo del sistema por su identificador.
      *
      * @param id identificador del vínculo a eliminar
@@ -145,6 +198,7 @@ public class UserPetRelationshipService {
         }
         relationshipRepository.deleteById(id);
     }
+
 
     // ---------- MÉTODOS ESPECÍFICOS ----------
 

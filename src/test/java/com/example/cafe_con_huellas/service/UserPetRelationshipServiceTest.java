@@ -46,6 +46,9 @@ class UserPetRelationshipServiceTest {
     @Mock
     private AdoptionRequestRepository adoptionRequestRepository;
 
+    @Mock
+    private EmailService emailService;
+
     @InjectMocks
     private UserPetRelationshipService relationshipService;
 
@@ -59,6 +62,8 @@ class UserPetRelationshipServiceTest {
         testUser = new User();
         testUser.setId(1L);
         testUser.setFirstName("Ana");
+        testUser.setLastName1("Cruces");
+        testUser.setEmail("ana@test.com");
 
         testPet = new Pet();
         testPet.setId(1L);
@@ -334,6 +339,64 @@ class UserPetRelationshipServiceTest {
 
         // Verificamos que no se intentó guardar ninguna solicitud
         verify(adoptionRequestRepository, never()).save(any());
+    }
+
+    // -------------------- update --------------------
+
+    @Test
+    @DisplayName("Debe enviar email de aceptación cuando active cambia a true")
+    void shouldSendAcceptedEmailWhenActiveChangesToTrue() {
+        // La relación empieza como inactiva
+        testRelationship.setActive(false);
+
+        // El DTO llega con active = true (el admin acepta)
+        testRelationshipDTO.setActive(true);
+
+        when(relationshipRepository.findById(1L)).thenReturn(Optional.of(testRelationship));
+        when(relationshipMapper.toDto(testRelationship)).thenReturn(testRelationshipDTO);
+
+        relationshipService.update(1L, testRelationshipDTO);
+
+        verify(emailService, times(1))
+                .notifyRelationshipAccepted("ana@test.com", "Ana Cruces", "Firu", "ACOGIDA");
+        verify(emailService, never())
+                .notifyRelationshipRejected(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Debe enviar email de rechazo cuando active cambia a false")
+    void shouldSendRejectedEmailWhenActiveChangesToFalse() {
+        // La relación empieza como activa
+        testRelationship.setActive(true);
+
+        // El DTO llega con active = false (el admin rechaza)
+        testRelationshipDTO.setActive(false);
+
+        when(relationshipRepository.findById(1L)).thenReturn(Optional.of(testRelationship));
+        when(relationshipMapper.toDto(testRelationship)).thenReturn(testRelationshipDTO);
+
+        relationshipService.update(1L, testRelationshipDTO);
+
+        verify(emailService, times(1))
+                .notifyRelationshipRejected("ana@test.com", "Ana Cruces", "Firu", "ACOGIDA");
+        verify(emailService, never())
+                .notifyRelationshipAccepted(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("No debe enviar email si active no cambia")
+    void shouldNotSendEmailWhenActiveDoesNotChange() {
+        // La relación empieza como activa y el DTO también llega como activa
+        testRelationship.setActive(true);
+        testRelationshipDTO.setActive(true);
+
+        when(relationshipRepository.findById(1L)).thenReturn(Optional.of(testRelationship));
+        when(relationshipMapper.toDto(testRelationship)).thenReturn(testRelationshipDTO);
+
+        relationshipService.update(1L, testRelationshipDTO);
+
+        verify(emailService, never()).notifyRelationshipAccepted(any(), any(), any(), any());
+        verify(emailService, never()).notifyRelationshipRejected(any(), any(), any(), any());
     }
 
 }

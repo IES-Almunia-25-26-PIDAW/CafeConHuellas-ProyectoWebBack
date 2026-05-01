@@ -163,6 +163,32 @@ class UserPetRelationshipControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    // -------------------- PUT --------------------
+
+    @Test
+    @DisplayName("PUT /api/relationships/{id} con ADMIN actualiza relación y devuelve 200")
+    @WithMockUser(roles = "ADMIN")
+    void shouldUpdateRelationshipAsAdmin() throws Exception {
+        UserPetRelationshipDTO dto = buildDTO();
+        when(relationshipService.update(eq(1L), any(UserPetRelationshipDTO.class))).thenReturn(dto);
+
+        mockMvc.perform(put("/api/relationships/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.relationshipType").value("ADOPCION"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/relationships/{id} sin ADMIN devuelve 403")
+    @WithMockUser(roles = "USER")
+    void shouldReturn403WhenUpdateAsUser() throws Exception {
+        mockMvc.perform(put("/api/relationships/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(buildDTO())))
+                .andExpect(status().isForbidden());
+    }
+
     // -------------------- PATCH --------------------
 
     @Test

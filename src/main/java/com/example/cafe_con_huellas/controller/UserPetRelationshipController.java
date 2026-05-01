@@ -106,6 +106,25 @@ public class UserPetRelationshipController {
     }
 
     /**
+     * Actualiza los datos de un vínculo existente.
+     * <p>
+     * Si el campo {@code active} cambia, se envía automáticamente un email
+     * al usuario notificándole la aceptación o el rechazo de su solicitud.
+     * Requiere rol ADMIN.
+     * </p>
+     *
+     * @param id  identificador del vínculo a actualizar
+     * @param dto nuevos datos del vínculo
+     * @return {@link UserPetRelationshipDTO} con los datos actualizados
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserPetRelationshipDTO updateRelationship(@PathVariable Long id, @Valid @RequestBody UserPetRelationshipDTO dto) {
+        return relationshipService.update(id, dto);
+    }
+
+
+    /**
      * Finaliza un vínculo activo asignando la fecha de cierre.
      * <p>
      * Se usa para marcar el fin de una acogida, paseo u otro proceso activo.

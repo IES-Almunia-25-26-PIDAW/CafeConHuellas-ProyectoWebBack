@@ -161,4 +161,72 @@ public class EmailService {
         // En producción esto vendría de application.properties con la URL real del frontend
         return "http://localhost:4200/adopcion/formulario/" + token;
     }
+
+    /**
+     * Notifica al usuario que el administrador ha aceptado su solicitud de vínculo con la mascota.
+     * <p>
+     * Se envía automáticamente cuando el admin pone {@code active = true} en una
+     * {@code UserPetRelationship}, para cualquier tipo de relación (adopción, acogida, paseo...).
+     * </p>
+     *
+     * @param userEmail        email del usuario destinatario
+     * @param userName         nombre del usuario para personalizar el mensaje
+     * @param petName          nombre de la mascota implicada
+     * @param relationshipType tipo de relación (ej: "ADOPCION", "ACOGIDA", "PASEO")
+     */
+    public void notifyRelationshipAccepted(String userEmail, String userName,
+                                           String petName, String relationshipType) {
+        String subject = "¡Tu solicitud ha sido aceptada! - " + petName;
+        String body = """
+            ¡Hola %s!
+            
+            Buenas noticias 🎉 
+            
+            El equipo de Café con Huellas ha aceptado tu solicitud
+            de %s con %s.
+            
+            Ya puedes ponerte en contacto con nosotros para coordinar los próximos pasos.
+            Si tienes alguna duda, responde a este correo y te atendemos encantados.
+            
+            ¡Gracias por formar parte de nuestra familia! ❤️
+            
+            — Café con Huellas
+            """.formatted(userName, relationshipType.toLowerCase(), petName);
+
+        sendEmail(userEmail, subject, body);
+    }
+
+    /**
+     * Notifica al usuario que el administrador ha rechazado o desactivado su vínculo con la mascota.
+     * <p>
+     * Se envía automáticamente cuando el admin pone {@code active = false} en una
+     * {@code UserPetRelationship} existente, para cualquier tipo de relación.
+     * </p>
+     *
+     * @param userEmail        email del usuario destinatario
+     * @param userName         nombre del usuario para personalizar el mensaje
+     * @param petName          nombre de la mascota implicada
+     * @param relationshipType tipo de relación (ej: "ADOPCION", "ACOGIDA", "PASEO")
+     */
+    public void notifyRelationshipRejected(String userEmail, String userName,
+                                           String petName, String relationshipType) {
+        String subject = "Actualización sobre tu solicitud - " + petName;
+        String body = """
+            ¡Hola %s!
+            
+            Queremos informarte de que tu solicitud de %s con %s
+            no ha podido seguir adelante en este momento.
+            
+            Esto no significa que no puedas volver a intentarlo en el futuro.
+            Si tienes dudas o quieres más información, no dudes en contactarnos
+            respondiendo a este correo.
+            
+            Gracias por tu interés y por querer ayudar a nuestros animales. 🐾
+            
+            — Café con Huellas
+            """.formatted(userName, relationshipType.toLowerCase(), petName);
+
+        sendEmail(userEmail, subject, body);
+    }
+
 }

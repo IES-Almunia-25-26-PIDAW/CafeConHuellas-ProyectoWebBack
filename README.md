@@ -28,6 +28,10 @@ El sistema distingue dos tipos de usuarios:
 - Al enviar el formulario, se notifica automáticamente al admin y se confirma la recepción al usuario por email
 - El admin puede revisar, aprobar o rechazar las solicitudes y registrar los detalles post-adopción
 - Al crear la relación de tipo ADOPCION, el sistema vincula automáticamente la solicitud aprobada con dicha relación, permitiendo al administrador consultar el formulario original desde el historial de relaciones
+- Cuando el admin acepta o rechaza cualquier tipo de vínculo usuario-mascota
+  (adopción, acogida, paseo...), el usuario recibe automáticamente un email
+  de notificación. Los vínculos con fecha de fin vencida se desactivan
+  automáticamente cada noche.
 
 ### 💰 Donaciones
 - Los usuarios pueden registrar donaciones económicas
@@ -344,6 +348,7 @@ src/
 │   │   ├── mapper/          # Mappers MapStruct (entidad ↔ DTO)
 │   │   ├── model/entity/    # Entidades JPA
 │   │   ├── repository/      # Repositorios Spring Data
+│   │   ├── scheduler/       # Tareas programadas automáticas
 │   │   ├── security/        # JwtService, JwtAuthFilter
 │   │   └── service/         # Lógica de negocio
 │   └── resources/

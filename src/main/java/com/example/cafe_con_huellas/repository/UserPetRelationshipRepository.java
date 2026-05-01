@@ -40,4 +40,13 @@ public interface UserPetRelationshipRepository extends JpaRepository<UserPetRela
      */
     List<UserPetRelationship> findByActiveTrue();
 
+    /**
+     * Devuelve los vínculos que siguen marcados como activos pero cuya fecha de fin
+     * ya ha pasado. Usado por el scheduler diario para desactivarlos automáticamente.
+     *
+     * @param date fecha de referencia (normalmente {@code LocalDate.now()})
+     * @return lista de vínculos activos con {@code endDate} anterior a la fecha indicada
+     */
+    List<UserPetRelationship> findByActiveTrueAndEndDateBefore(LocalDate date);
+
 }
