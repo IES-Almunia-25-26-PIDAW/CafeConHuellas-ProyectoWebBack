@@ -143,7 +143,6 @@ public class UserPetRelationshipService {
      *   <li>Si pasa a {@code false} → email de rechazo o cierre.</li>
      * </ul>
      * Aplica para todos los tipos de relación (adopción, acogida, paseo, etc.).
-     * </p>
      *
      * @param id  identificador del vínculo a actualizar
      * @param dto nuevos datos del vínculo
