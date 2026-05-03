@@ -6,6 +6,7 @@ import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.mapper.UserPetRelationshipMapper;
 import com.example.cafe_con_huellas.model.entity.AdoptionRequestStatus;
 import com.example.cafe_con_huellas.model.entity.RelationshipType;
+import com.example.cafe_con_huellas.model.entity.User;
 import com.example.cafe_con_huellas.model.entity.UserPetRelationship;
 import com.example.cafe_con_huellas.repository.AdoptionRequestRepository;
 import com.example.cafe_con_huellas.repository.PetRepository;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -131,6 +133,94 @@ public class UserPetRelationshipService {
         }
 
         return relationshipMapper.toDto(savedRelationship);
+    }
+
+    // ---------- MÉTODOS PARA USUARIO AUTENTICADO ----------
+
+    /**
+     * Registra un nuevo vínculo entre el usuario autenticado y una mascota.
+     * <p>
+     * A diferencia de {@link #save(UserPetRelationshipDTO)}, este método está diseñado
+     * para ser invocado por un usuario con rol USER desde la web. Aplica las siguientes
+     * restricciones adicionales de seguridad y negocio:
+     * </p>
+     * <ul>
+     *   <li>El {@code userId} se obtiene del email autenticado (JWT), nunca del body.</li>
+     *   <li>Solo se permiten los tipos de relación: ACOGIDA, PASEO y VOLUNTARIADO.
+     *       El tipo ADOPCION está bloqueado porque tiene su propio flujo con formulario.</li>
+     *   <li>La relación se crea siempre con {@code active = false},
+     *       pendiente de aprobación por el administrador.</li>
+     * </ul>
+     *
+     * @param email email del usuario autenticado extraído del JWT
+     * @param dto   datos del vínculo a registrar (el userId del body se ignora)
+     * @return {@link UserPetRelationshipDTO} con el registro creado
+     * @throws ResourceNotFoundException si el usuario autenticado o la mascota no existen
+     * @throws BadRequestException si el tipo de relación es ADOPCION o se viola alguna regla de exclusividad
+     */
+    @Transactional
+    public UserPetRelationshipDTO saveAsUser(String email, UserPetRelationshipDTO dto) {
+
+        // Tipos de relación permitidos para un usuario normal
+        Set<RelationshipType> allowedTypes = Set.of(
+                RelationshipType.ACOGIDA,
+                RelationshipType.PASEO,
+                RelationshipType.VOLUNTARIADO
+        );
+
+        // Validamos que el tipo de relación esté permitido para usuarios normales
+        RelationshipType requestedType;
+        try {
+            requestedType = RelationshipType.valueOf(dto.getRelationshipType().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Tipo de relación no válido: " + dto.getRelationshipType());
+        }
+
+        if (!allowedTypes.contains(requestedType)) {
+            throw new BadRequestException(
+                    "Los usuarios solo pueden solicitar relaciones de tipo ACOGIDA, PASEO o VOLUNTARIADO. " +
+                            "El proceso de ADOPCION requiere un formulario específico.");
+        }
+
+        // Obtenemos el usuario autenticado desde la BD usando el email del JWT
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado."));
+
+        // Verificamos que la mascota existe
+        var pet = petRepository.findById(dto.getPetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + dto.getPetId()));
+
+        // Evitamos solicitudes duplicadas del mismo usuario para la misma mascota y tipo
+        if (relationshipRepository.existsByUserIdAndPetIdAndRelationshipType(
+                user.getId(), dto.getPetId(), requestedType)) {
+            throw new BadRequestException(
+                    "Ya tienes una solicitud de " + requestedType.name() +
+                            " registrada para esta mascota.");
+        }
+
+        // Verificamos conflictos de vínculos activos (reutilizamos la lógica existente)
+        List<UserPetRelationship> activeLinks = relationshipRepository.findByPetId(dto.getPetId())
+                .stream()
+                .filter(UserPetRelationship::getActive)
+                .toList();
+
+        // Si la mascota ya está adoptada, bloqueamos cualquier nuevo vínculo
+        if (activeLinks.stream().anyMatch(r -> r.getRelationshipType() == RelationshipType.ADOPCION)) {
+            throw new BadRequestException("Esta mascota ya figura como adoptada y no admite nuevos vínculos.");
+        }
+
+        // Construimos la entidad forzando active=false y startDate=hoy
+        // El userId siempre viene del JWT, nunca del body
+        UserPetRelationship relationship = UserPetRelationship.builder()
+                .user(user)
+                .pet(pet)
+                .relationshipType(requestedType)
+                .startDate(LocalDate.now())
+                .active(false) // siempre pendiente de aprobación del admin
+                .build();
+
+        UserPetRelationship saved = relationshipRepository.save(relationship);
+        return relationshipMapper.toDto(saved);
     }
 
     /**

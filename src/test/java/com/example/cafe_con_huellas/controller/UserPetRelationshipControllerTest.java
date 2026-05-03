@@ -163,6 +163,34 @@ class UserPetRelationshipControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    // -------------------- POST /me --------------------
+
+    @Test
+    @DisplayName("POST /api/relationships/me con USER crea relación y devuelve 201")
+    @WithMockUser(username = "maria@example.com", roles = "USER")
+    void shouldCreateRelationshipAsUser() throws Exception {
+        UserPetRelationshipDTO dto = buildDTO(); // usa el builder que ya tenéis en el test
+        dto.setRelationshipType("ACOGIDA");
+
+        when(relationshipService.saveAsUser(eq("maria@example.com"), any(UserPetRelationshipDTO.class)))
+                .thenReturn(dto);
+
+        mockMvc.perform(post("/api/relationships/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.relationshipType").value("ACOGIDA"));
+    }
+
+    @Test
+    @DisplayName("POST /api/relationships/me sin autenticación devuelve 403")
+    void shouldReturn403WhenCreateRelationshipAsUserUnauthenticated() throws Exception {
+        mockMvc.perform(post("/api/relationships/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new UserPetRelationshipDTO())))
+                .andExpect(status().isForbidden());
+    }
+
     // -------------------- PUT --------------------
 
     @Test

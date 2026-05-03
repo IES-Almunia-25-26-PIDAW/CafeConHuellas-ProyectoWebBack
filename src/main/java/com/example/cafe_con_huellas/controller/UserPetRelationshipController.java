@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -103,6 +104,29 @@ public class UserPetRelationshipController {
     @PreAuthorize("hasRole('ADMIN')")
     public UserPetRelationshipDTO createRelationship(@Valid @RequestBody UserPetRelationshipDTO dto) {
         return relationshipService.save(dto);
+    }
+
+    /**
+     * Permite a un usuario autenticado solicitar un vínculo con una mascota desde la web.
+     * <p>
+     * El usuario solo puede crear relaciones de tipo ACOGIDA, PASEO o VOLUNTARIADO.
+     * El tipo ADOPCION no está permitido por esta vía, ya que dispone de su propio
+     * flujo con formulario ({@code POST /api/adoption-form/send}).
+     * La relación se crea con {@code active = false}, quedando pendiente
+     * de aprobación por parte del administrador.
+     * El {@code userId} se extrae automáticamente del JWT, garantizando
+     * que el usuario solo puede crear relaciones para sí mismo.
+     * </p>
+     *
+     * @param dto datos del vínculo a registrar (el campo userId del body se ignora)
+     * @return {@link UserPetRelationshipDTO} con el registro creado y pendiente de aprobación
+     */
+    @PostMapping("/me")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserPetRelationshipDTO createRelationshipAsUser(@Valid @RequestBody UserPetRelationshipDTO dto) {
+        // Extraemos el email del usuario autenticado desde el JWT
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return relationshipService.saveAsUser(email, dto);
     }
 
     /**

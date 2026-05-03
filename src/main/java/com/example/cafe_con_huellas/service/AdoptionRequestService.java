@@ -4,11 +4,10 @@ import com.example.cafe_con_huellas.dto.AdoptionRequestDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.mapper.AdoptionRequestMapper;
-import com.example.cafe_con_huellas.model.entity.AdoptionFormToken;
-import com.example.cafe_con_huellas.model.entity.AdoptionRequest;
-import com.example.cafe_con_huellas.model.entity.AdoptionRequestStatus;
+import com.example.cafe_con_huellas.model.entity.*;
 import com.example.cafe_con_huellas.repository.AdoptionFormTokenRepository;
 import com.example.cafe_con_huellas.repository.AdoptionRequestRepository;
+import com.example.cafe_con_huellas.repository.PetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +28,7 @@ public class AdoptionRequestService {
     private final AdoptionRequestRepository requestRepository;
     private final AdoptionRequestMapper requestMapper;
     private final AdoptionFormTokenRepository tokenRepository;
+    private final PetRepository petRepository;
 
     /**
      * Persiste una nueva solicitud de adopción a partir del token y el formulario cumplimentado.
@@ -111,19 +111,33 @@ public class AdoptionRequestService {
     }
 
     /**
-     * Actualiza el estado de una solicitud (aprobar o rechazar).
+     * Actualiza el estado de una solicitud de adopción.
+     * <p>
+     * Si el nuevo estado es {@link AdoptionRequestStatus#APROBADA}, actualiza
+     * automáticamente el {@code adoptionStatus} de la mascota asociada a
+     * {@link AdoptionStatus#ADOPTADO} dentro de la misma transacción,
+     * garantizando consistencia entre ambas entidades.
+     * </p>
      *
-     * @param id        identificador de la solicitud a actualizar
-     * @param newStatus nuevo estado a asignar ({@link AdoptionRequestStatus})
-     * @return {@link AdoptionRequestDTO} con el estado actualizado
+     * @param id     identificador de la solicitud a actualizar
+     * @param status nuevo estado de la solicitud
+     * @return {@link AdoptionRequestDTO} con los datos actualizados
      * @throws ResourceNotFoundException si no existe la solicitud con ese ID
      */
     @Transactional
-    public AdoptionRequestDTO updateStatus(Long id, AdoptionRequestStatus newStatus) {
+    public AdoptionRequestDTO updateStatus(Long id, AdoptionRequestStatus status) {
         AdoptionRequest request = requestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitud no encontrada con ID: " + id));
 
-        request.setStatus(newStatus);
+        request.setStatus(status);
+
+        // Si se aprueba la solicitud, la mascota pasa automáticamente a ADOPTADO
+        if (status == AdoptionRequestStatus.APROBADA) {
+            Pet pet = request.getFormToken().getPet();
+            pet.setAdoptionStatus(AdoptionStatus.ADOPTADO);
+            petRepository.save(pet);
+        }
+
         return requestMapper.toDto(requestRepository.save(request));
     }
 

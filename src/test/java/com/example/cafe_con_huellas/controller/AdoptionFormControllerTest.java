@@ -5,6 +5,7 @@ import com.example.cafe_con_huellas.dto.AdoptionRequestDTO;
 import com.example.cafe_con_huellas.model.entity.AdoptionFormToken;
 import com.example.cafe_con_huellas.model.entity.Pet;
 import com.example.cafe_con_huellas.model.entity.User;
+import com.example.cafe_con_huellas.repository.UserRepository;
 import com.example.cafe_con_huellas.security.JwtService;
 import com.example.cafe_con_huellas.service.AdoptionFormTokenService;
 import com.example.cafe_con_huellas.service.AdoptionRequestService;
@@ -25,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -55,6 +57,9 @@ class AdoptionFormControllerTest {
 
     @MockitoBean
     private UserDetailsService userDetailsService;
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     private AdoptionFormToken buildToken() {
         User user = new User();
@@ -88,15 +93,40 @@ class AdoptionFormControllerTest {
                 .andExpect(status().isNoContent());
     }
 
+
     @Test
-    @DisplayName("POST /api/adoption-form/send sin ADMIN devuelve 403")
-    @WithMockUser(roles = "USER")
-    void shouldReturn403WhenSendAsUser() throws Exception {
+    @DisplayName("POST /api/adoption-form/send con USER envía formulario a sí mismo y devuelve 204")
+    @WithMockUser(username = "maria@example.com", roles = "USER")
+    void shouldSendAdoptionFormAsUser() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("maria@example.com");
+
+        when(userRepository.findByEmail("maria@example.com")).thenReturn(Optional.of(user));
+        doNothing().when(tokenService).generateAndSendFormToken(1L, 1L);
+
         mockMvc.perform(post("/api/adoption-form/send")
-                        .param("userId", "1")
+                        .param("petId", "1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("POST /api/adoption-form/send con ADMIN sin userId devuelve 400")
+    @WithMockUser(roles = "ADMIN")
+    void shouldReturn400WhenAdminSendsWithoutUserId() throws Exception {
+        mockMvc.perform(post("/api/adoption-form/send")
+                        .param("petId", "1"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/adoption-form/send sin autenticación devuelve 403")
+    void shouldReturn403WhenUnauthenticated() throws Exception {
+        mockMvc.perform(post("/api/adoption-form/send")
                         .param("petId", "1"))
                 .andExpect(status().isForbidden());
     }
+
 
     // -------------------- GET /validate/{token} --------------------
 

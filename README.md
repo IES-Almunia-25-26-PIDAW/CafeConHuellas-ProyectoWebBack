@@ -32,6 +32,16 @@ El sistema distingue dos tipos de usuarios:
   (adopción, acogida, paseo...), el usuario recibe automáticamente un email
   de notificación. Los vínculos con fecha de fin vencida se desactivan
   automáticamente cada noche.
+- El usuario registrado puede solicitar directamente desde la web el envío
+  del formulario de adopción para una mascota concreta. Su identidad se
+  extrae automáticamente del JWT, garantizando que solo puede solicitarlo
+  para sí mismo.
+- El usuario registrado puede solicitar vínculos de tipo ACOGIDA, PASEO o
+  VOLUNTARIADO directamente desde la web. La relación se crea con estado
+  inactivo, pendiente de aprobación por el administrador. El tipo ADOPCION
+  está reservado al flujo del formulario.
+- Al aprobar una solicitud de adopción, el sistema actualiza automáticamente
+  el estado de la mascota a ADOPTADO.
 
 ### 💰 Donaciones
 - Los usuarios pueden registrar donaciones económicas
@@ -307,6 +317,13 @@ La API usa **JWT Bearer Token**. El flujo es:
 | `POST` | `/api/auth/login` | Login y obtención de token |
 | `GET` | `/api/adoption-form/validate/{token}` | Validar token de formulario de adopción |
 | `POST` | `/api/adoption-form/submit/{token}` | Enviar formulario de adopción |
+
+### Endpoints para usuarios autenticados (requieren token)
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `POST` | `/api/adoption-form/send` | Enviar formulario (USER: solo para sí mismo; ADMIN: para cualquier usuario) |
+| `POST` | `/api/relationships/me` | Solicitar vínculo con una mascota (solo ACOGIDA, PASEO o VOLUNTARIADO) |
 
 ---
 

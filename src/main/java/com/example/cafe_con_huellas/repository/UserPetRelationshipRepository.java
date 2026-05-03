@@ -1,5 +1,6 @@
 package com.example.cafe_con_huellas.repository;
 
+import com.example.cafe_con_huellas.model.entity.RelationshipType;
 import com.example.cafe_con_huellas.model.entity.UserPetRelationship;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -48,5 +49,18 @@ public interface UserPetRelationshipRepository extends JpaRepository<UserPetRela
      * @return lista de vínculos activos con {@code endDate} anterior a la fecha indicada
      */
     List<UserPetRelationship> findByActiveTrueAndEndDateBefore(LocalDate date);
+
+    /**
+     * Comprueba si ya existe un vínculo entre un usuario y una mascota
+     * para un tipo de relación concreto.
+     * Usado para evitar solicitudes duplicadas desde el endpoint {@code POST /api/relationships/me}.
+     *
+     * @param userId           identificador del usuario
+     * @param petId            identificador de la mascota
+     * @param relationshipType tipo de relación a comprobar
+     * @return {@code true} si ya existe un vínculo de ese tipo para ese usuario y mascota
+     */
+    boolean existsByUserIdAndPetIdAndRelationshipType(
+            Long userId, Long petId, RelationshipType relationshipType);
 
 }

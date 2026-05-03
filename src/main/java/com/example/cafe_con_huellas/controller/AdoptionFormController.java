@@ -1,13 +1,17 @@
 package com.example.cafe_con_huellas.controller;
 
 import com.example.cafe_con_huellas.dto.AdoptionRequestDTO;
+import com.example.cafe_con_huellas.exception.BadRequestException;
+import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
 import com.example.cafe_con_huellas.model.entity.AdoptionFormToken;
+import com.example.cafe_con_huellas.repository.UserRepository;
 import com.example.cafe_con_huellas.service.AdoptionFormTokenService;
 import com.example.cafe_con_huellas.service.AdoptionRequestService;
 import com.example.cafe_con_huellas.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -25,29 +29,55 @@ import org.springframework.web.bind.annotation.*;
 public class AdoptionFormController {
 
     private final AdoptionFormTokenService tokenService;
-    private final AdoptionRequestService adoptionRequestService; // NUEVO
+    private final AdoptionRequestService adoptionRequestService;
     private final EmailService emailService;
+    private final UserRepository userRepository;
 
 
     /**
-     * Genera un token de acceso y envía el formulario de adopción por email al usuario.
+     * Genera un token de acceso y envía el formulario de adopción por email.
      * <p>
-     * El token tiene una expiración limitada y solo puede usarse una vez.
-     * Requiere rol ADMIN.
+     * El comportamiento varía según el rol del usuario autenticado:
      * </p>
+     * <ul>
+     *   <li><b>ADMIN:</b> debe proporcionar {@code userId} y {@code petId} como parámetros.
+     *       Puede enviar el formulario a cualquier usuario del sistema.</li>
+     *   <li><b>USER:</b> solo debe proporcionar {@code petId}. Su {@code userId} se extrae
+     *       automáticamente del JWT, garantizando que solo puede solicitarlo para sí mismo.</li>
+     * </ul>
+     * El token generado tiene una validez de 48 horas y solo puede usarse una vez.
      *
-     * @param userId identificador del usuario destinatario
+     * @param userId identificador del usuario destinatario (obligatorio para ADMIN, ignorado para USER)
      * @param petId  identificador de la mascota sobre la que se solicita la adopción
      */
     @PostMapping("/send")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
     public void sendAdoptionForm(
-            @RequestParam Long userId,
+            @RequestParam(required = false) Long userId,
             @RequestParam Long petId) {
 
-        // El servicio genera el token, lo guarda y envía el correo
-        tokenService.generateAndSendFormToken(userId, petId);
+        // Obtenemos el email del usuario autenticado desde el JWT
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        // Comprobamos si es ADMIN (puede especificar cualquier userId)
+        // o USER (solo puede enviarse el formulario a sí mismo)
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            // El admin debe proporcionar el userId obligatoriamente
+            if (userId == null) {
+                throw new BadRequestException("El administrador debe proporcionar el userId.");
+            }
+            tokenService.generateAndSendFormToken(userId, petId);
+        } else {
+            // El usuario autenticado: extraemos su ID desde la BD usando el email del JWT
+            Long authenticatedUserId = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado."))
+                    .getId();
+            tokenService.generateAndSendFormToken(authenticatedUserId, petId);
+        }
     }
 
 

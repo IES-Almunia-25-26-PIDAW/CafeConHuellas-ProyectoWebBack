@@ -7,6 +7,7 @@ import com.example.cafe_con_huellas.mapper.AdoptionRequestMapper;
 import com.example.cafe_con_huellas.model.entity.*;
 import com.example.cafe_con_huellas.repository.AdoptionFormTokenRepository;
 import com.example.cafe_con_huellas.repository.AdoptionRequestRepository;
+import com.example.cafe_con_huellas.repository.PetRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,9 @@ class AdoptionRequestServiceTest {
 
     @Mock
     private AdoptionFormTokenRepository tokenRepository;
+
+    @Mock
+    private PetRepository petRepository;
 
     @InjectMocks
     private AdoptionRequestService requestService;
@@ -241,6 +245,38 @@ class AdoptionRequestServiceTest {
 
         assertThatThrownBy(() -> requestService.findByRelationshipId(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // -------------------- shouldUpdatePetStatusToAdoptadoWhenApproved --------------------
+
+    @Test
+    @DisplayName("updateStatus() cambia adoptionStatus de la mascota a ADOPTADO al aprobar")
+    void shouldUpdatePetStatusToAdoptadoWhenApproved() {
+        // Montamos la cadena: request → formToken → pet
+        Pet pet = new Pet();
+        pet.setId(1L);
+        pet.setAdoptionStatus(AdoptionStatus.EN_PROCESO);
+
+        AdoptionFormToken token = new AdoptionFormToken();
+        token.setPet(pet);
+
+        adoptionRequest.setFormToken(token);
+
+        AdoptionRequestDTO approvedDTO = AdoptionRequestDTO.builder()
+                .id(1L)
+                .status(AdoptionRequestStatus.APROBADA)
+                .build();
+
+        when(requestRepository.findById(1L)).thenReturn(Optional.of(adoptionRequest));
+        when(requestRepository.save(any())).thenReturn(adoptionRequest);
+        when(petRepository.save(any())).thenReturn(pet);
+        when(requestMapper.toDto(any())).thenReturn(approvedDTO);
+
+        AdoptionRequestDTO result = requestService.updateStatus(1L, AdoptionRequestStatus.APROBADA);
+
+        assertThat(result.getStatus()).isEqualTo(AdoptionRequestStatus.APROBADA);
+        assertThat(pet.getAdoptionStatus()).isEqualTo(AdoptionStatus.ADOPTADO);
+        verify(petRepository).save(pet); // verificamos que se guardó la mascota
     }
 
 }

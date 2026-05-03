@@ -29,8 +29,10 @@ public class UserPetRelationshipDTO {
     /** Identificador único del vínculo. Nulo en creaciones. */
     private Long id;
 
-    /** Identificador del usuario que participa en el vínculo. */
-    @NotNull(message = "El ID del usuario es obligatorio")
+    /** Identificador del usuario que participa en el vínculo.
+     * Opcional en {@code POST /api/relationships/me}: se extrae automáticamente del JWT.
+     * Obligatorio en {@code POST /api/relationships} (ADMIN): el servicio valida su existencia en BD.
+     */
     private Long userId;
 
     /** Identificador de la mascota que forma parte del vínculo. */

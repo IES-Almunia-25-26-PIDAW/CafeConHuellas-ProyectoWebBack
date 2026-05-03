@@ -9,7 +9,6 @@ import com.example.cafe_con_huellas.repository.AdoptionRequestRepository;
 import com.example.cafe_con_huellas.repository.PetRepository;
 import com.example.cafe_con_huellas.repository.UserPetRelationshipRepository;
 import com.example.cafe_con_huellas.repository.UserRepository;
-import static org.assertj.core.api.Assertions.assertThatNoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -397,6 +396,92 @@ class UserPetRelationshipServiceTest {
 
         verify(emailService, never()).notifyRelationshipAccepted(any(), any(), any(), any());
         verify(emailService, never()).notifyRelationshipRejected(any(), any(), any(), any());
+    }
+
+    // -------------------- saveAsUser --------------------
+
+    @Test
+    @DisplayName("saveAsUser() crea relación con active=false para usuario autenticado")
+    void shouldSaveRelationshipAsUser() {
+        testRelationshipDTO.setRelationshipType("ACOGIDA");
+        testRelationship.setRelationshipType(RelationshipType.ACOGIDA);
+        testRelationship.setActive(false);
+
+        when(userRepository.findByEmail("maria@example.com")).thenReturn(Optional.of(testUser));
+        when(petRepository.findById(1L)).thenReturn(Optional.of(testPet));
+        // explícito que no hay duplicado
+        when(relationshipRepository.existsByUserIdAndPetIdAndRelationshipType(
+                1L, 1L, RelationshipType.ACOGIDA)).thenReturn(false);
+        when(relationshipRepository.findByPetId(1L)).thenReturn(Collections.emptyList());
+        when(relationshipRepository.save(any(UserPetRelationship.class))).thenReturn(testRelationship);
+        when(relationshipMapper.toDto(testRelationship)).thenReturn(testRelationshipDTO);
+
+        UserPetRelationshipDTO result = relationshipService.saveAsUser("maria@example.com", testRelationshipDTO);
+
+        assertThat(result).isNotNull();
+        verify(relationshipRepository).save(argThat(r -> !r.getActive()));
+    }
+
+    @Test
+    @DisplayName("saveAsUser() lanza BadRequestException si el tipo es ADOPCION")
+    void shouldThrowWhenUserTriesToCreateAdopcionRelationship() {
+        testRelationshipDTO.setRelationshipType("ADOPCION");
+
+        assertThatThrownBy(() -> relationshipService.saveAsUser("maria@example.com", testRelationshipDTO))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("ADOPCION");
+
+        verify(relationshipRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("saveAsUser() lanza ResourceNotFoundException si el usuario autenticado no existe")
+    void shouldThrowWhenAuthenticatedUserNotFound() {
+        testRelationshipDTO.setRelationshipType("PASEO");
+
+        when(userRepository.findByEmail("noexiste@test.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> relationshipService.saveAsUser("noexiste@test.com", testRelationshipDTO))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(relationshipRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("saveAsUser() lanza BadRequestException si la mascota ya está adoptada")
+    void shouldThrowWhenPetIsAlreadyAdopted() {
+        testRelationshipDTO.setRelationshipType("ACOGIDA");
+
+        UserPetRelationship adoptedLink = new UserPetRelationship();
+        adoptedLink.setRelationshipType(RelationshipType.ADOPCION);
+        adoptedLink.setActive(true);
+
+        when(userRepository.findByEmail("maria@example.com")).thenReturn(Optional.of(testUser));
+        when(petRepository.findById(1L)).thenReturn(Optional.of(testPet));
+        when(relationshipRepository.findByPetId(1L)).thenReturn(List.of(adoptedLink));
+
+        assertThatThrownBy(() -> relationshipService.saveAsUser("maria@example.com", testRelationshipDTO))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("adoptada");
+
+        verify(relationshipRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("saveAsUser() lanza BadRequestException si ya existe una solicitud igual")
+    void shouldThrowWhenDuplicateRelationshipAsUser() {
+        testRelationshipDTO.setRelationshipType("ACOGIDA");
+
+        when(userRepository.findByEmail("maria@example.com")).thenReturn(Optional.of(testUser));
+        when(petRepository.findById(1L)).thenReturn(Optional.of(testPet));
+        when(relationshipRepository.existsByUserIdAndPetIdAndRelationshipType(
+                1L, 1L, RelationshipType.ACOGIDA)).thenReturn(true);
+
+        assertThatThrownBy(() -> relationshipService.saveAsUser("maria@example.com", testRelationshipDTO))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("solicitud");
+
+        verify(relationshipRepository, never()).save(any());
     }
 
 }
