@@ -1,64 +1,75 @@
+# ══════════════════════════════════════════════════════════════════
+# DOCKER COMPOSE - BACKEND
+# Café con Huellas — Servicios: MySQL + Mailpit + Backend Spring Boot
+# Las variables de entorno sensibles se leen de un archivo .env
+# ══════════════════════════════════════════════════════════════════
+
 services:
+
+  # BASE DE DATOS
   mysql:
-    image: mysql:8.0
+    image: mysql:8.0                        # Versión fija para evitar sorpresas en updates
     container_name: cafe_con_huellas_db
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: animal_shelter_db
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: root             # Contraseña del usuario root (solo entorno local)
+      MYSQL_DATABASE: animal_shelter_db     # Base de datos que se crea automáticamente
+      MYSQL_USER: ${DB_USERNAME}            # Usuario de la app (desde .env)
+      MYSQL_PASSWORD: ${DB_PASSWORD}        # Contraseña del usuario (desde .env)
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql           # Volumen persistente: los datos sobreviven a reinicios
     networks:
       - cafe_con_huellas_network
-    healthcheck:
+    healthcheck:                            # Comprueba que MySQL esté listo antes de arrancar el backend
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 10s                         # Comprueba cada 10 segundos
+      timeout: 5s                           # Espera máx 5s por respuesta
+      retries: 5                            # Reintenta 5 veces antes de marcar como unhealthy
 
+  # SERVIDOR DE EMAIL (desarrollo)
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:latest           # Servidor SMTP falso para capturar emails en desarrollo
     container_name: cafe_con_huellas_mail
     networks:
       - cafe_con_huellas_network
     ports:
-      - "1025:1025"   # puerto SMTP (Spring lo usa para enviar)
-      - "8025:8025"   # interfaz web para ver los emails
-    restart: unless-stopped
+      - "1025:1025"                         # Puerto SMTP: Spring Boot envía emails aquí
+      - "8025:8025"                         # Interfaz web: http://localhost:8025 para ver los emails
+    restart: unless-stopped                 # Se reinicia automáticamente salvo que se pare manualmente
 
+  #BACKEND Spring Boot 
   backend:
-    build: .
+    build: .                                # Construye la imagen usando el Dockerfile del directorio actual
     container_name: cafe_con_huellas_backend
     ports:
-      - "8087:8087"
+      - "8087:8087"                         # Expone la API REST en el puerto 8087 del host
     networks:
       - cafe_con_huellas_network
     environment:
+      # Cadena de conexión a MySQL (usa el nombre del servicio como host dentro de la red Docker)
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/animal_shelter_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}    # Desde .env
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}    # Desde .env
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      MAIL_HOST: mailpit
-      MAIL_PORT: 1025
-      JWT_SECRET: ${JWT_SECRET}
-      FRONTEND_URL: ${FRONTEND_URL}
-      BACKEND_URL: ${BACKEND_URL}
+      MAIL_USERNAME: ${MAIL_USERNAME}               # Cuenta de email (Mailpit no lo valida en local)
+      MAIL_PASSWORD: ${MAIL_PASSWORD}               # Contraseña email (Mailpit no lo valida en local)
+      MAIL_HOST: mailpit                            # Apunta al servicio mailpit de este compose
+      MAIL_PORT: 1025                               # Puerto SMTP de Mailpit
+      JWT_SECRET: ${JWT_SECRET}                     # Clave secreta para firmar tokens JWT (desde .env)
+      FRONTEND_URL: ${FRONTEND_URL}                 # URL del frontend (para CORS y enlaces en emails)
+      BACKEND_URL: ${BACKEND_URL}                   # URL propia del backend
     depends_on:
       mysql:
-        condition: service_healthy
+        condition: service_healthy          # Espera a que MySQL pase el healthcheck antes de arrancar
       mailpit:
-        condition: service_started
+        condition: service_started          # Solo espera a que Mailpit esté iniciado
 
+# VOLÚMENES 
 volumes:
-  mysql_data:
+  mysql_data:                               # Volumen con nombre para persistir datos de MySQL
 
+# REDES
 networks:
   cafe_con_huellas_network:
-    name: cafe_con_huellas_network
-    driver: bridge
-
-
+    name: cafe_con_huellas_network          # Nombre explícito para que el frontend pueda unirse
+    driver: bridge                          # Red bridge estándar de Docker
