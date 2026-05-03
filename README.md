@@ -395,6 +395,153 @@ La documentación técnica está generada con **Javadoc** y cubre todas las capa
 Para consultarla localmente abre el archivo `docs/javadoc/index.html` en tu navegador.
 
 ---
+## 🐳 Dockerización del Backend
+
+### 📦 Dockerfile
+
+El archivo `Dockerfile` del backend define el proceso de construcción de la imagen Docker para la API REST desarrollada con Spring Boot.
+
+Se utiliza una estrategia **multi-stage**, que permite separar la fase de compilación de la fase de ejecución, reduciendo el tamaño final de la imagen y mejorando la eficiencia.
+
+---
+
+### 🔹 Stage 1: Build (Maven + JDK)
+
+En esta fase se compila el proyecto Java:
+
+* `FROM maven:3.9-eclipse-temurin-17 AS build`
+  Utiliza una imagen con Maven y JDK 17 para compilar la aplicación.
+
+* `WORKDIR /app`
+  Define el directorio de trabajo dentro del contenedor.
+
+* `COPY pom.xml`
+  Copia el archivo de dependencias para aprovechar la caché de Docker.
+
+* `COPY src ./src`
+  Copia el código fuente del proyecto.
+
+* `RUN mvn clean package -DskipTests`
+  Compila el proyecto y genera el archivo `.jar`, omitiendo los tests para acelerar el proceso.
+
+---
+
+### 🔹 Stage 2: Runtime (JRE)
+
+En esta fase se ejecuta la aplicación:
+
+* `FROM eclipse-temurin:17-jre`
+  Imagen ligera que solo incluye el entorno de ejecución de Java.
+
+* `WORKDIR /app`
+  Directorio de trabajo.
+
+* `COPY --from=build /app/target/*.jar app.jar`
+  Copia el archivo `.jar` generado en la fase anterior.
+
+* `EXPOSE 8087`
+  Documenta el puerto donde se ejecuta la API.
+
+* `ENTRYPOINT ["java", "-jar", "app.jar"]`
+  Comando que arranca la aplicación.
+
+---
+
+Este enfoque permite obtener una imagen optimizada, sin incluir herramientas de compilación innecesarias en producción.
+
+---
+
+## ⚙️ docker-compose.yml
+
+El archivo `docker-compose.yml` define los servicios necesarios para ejecutar el backend completo, incluyendo base de datos, servidor de correo y API.
+
+### 📄 Servicios definidos
+
+#### 🗄️ MySQL (Base de datos)
+
+* Imagen: `mysql:8.0`
+* Crea automáticamente la base de datos `animal_shelter_db`
+* Usa variables de entorno para credenciales
+* Incluye un volumen (`mysql_data`) para persistir los datos
+* Dispone de un `healthcheck` para asegurar que esté listo antes de iniciar el backend
+
+---
+
+#### 📧 Mailpit (Servidor de correo en desarrollo)
+
+* Simula un servidor SMTP
+* Permite visualizar emails en: http://localhost:8025
+* No envía correos reales, solo los captura
+
+---
+
+#### ⚙️ Backend (Spring Boot)
+
+* Se construye a partir del Dockerfile (`build: .`)
+
+* Expone el puerto `8087`
+
+* Configura variables de entorno necesarias:
+
+  * Conexión a la base de datos
+  * Configuración de correo
+  * Clave JWT
+  * URLs de frontend y backend
+
+* Usa `depends_on` para esperar a:
+
+  * MySQL (cuando esté listo)
+  * Mailpit (cuando esté iniciado)
+
+---
+
+### 🔹 Volúmenes
+
+* `mysql_data`: permite que los datos de la base de datos se mantengan aunque se reinicien los contenedores.
+
+---
+
+### 🔹 Redes
+
+* `cafe_con_huellas_network`: red compartida entre servicios
+* Permite la comunicación interna entre contenedores usando sus nombres (ej: `mysql`, `mailpit`)
+
+---
+
+## 🔄 Funcionamiento del sistema
+
+Al ejecutar:
+
+```bash id="bk1x8p"
+docker compose up --build
+```
+
+Docker realiza:
+
+1. Construcción de la imagen del backend
+2. Creación del contenedor de MySQL
+3. Inicialización de la base de datos
+4. Arranque de Mailpit
+5. Inicio del backend una vez que MySQL está disponible
+6. Aplicación de migraciones con Liquibase
+
+---
+
+## ⚠️ Consideraciones importantes
+
+* Las credenciales se gestionan mediante un archivo `.env`, que no se sube al repositorio por seguridad.
+* El backend depende de MySQL, por lo que no puede arrancar correctamente sin él.
+* Mailpit se usa solo en desarrollo.
+* Para reiniciar completamente la base de datos:
+
+```bash id="bkreset1"
+docker compose down -v
+docker compose up --build
+```
+
+* El uso de `healthcheck` evita errores por intentos de conexión antes de que MySQL esté listo.
+
+---
 
 ## 👩‍💻 Autoras
 
