@@ -229,4 +229,31 @@ public class EmailService {
         sendEmail(userEmail, subject, body);
     }
 
+    /**
+     * Notifica al administrador cuando un usuario envía un mensaje
+     * desde el formulario de contacto público de la web.
+     *
+     * @param nombre  nombre del usuario que escribe
+     * @param email   email de contacto del usuario
+     * @param mensaje contenido del mensaje enviado
+     */
+    public void notifyAdminContactForm(String nombre, String email, String mensaje) {
+        String subject = "Nuevo mensaje de contacto de " + nombre;
+        String body = """
+            ¡Hola Administrador!
+            
+            Has recibido un nuevo mensaje a través del formulario de contacto:
+            
+            - Nombre: %s
+            - Email: %s
+            - Mensaje:
+            
+            %s
+            
+            — Café con Huellas
+            """.formatted(nombre, email, mensaje);
+
+        sendEmail(adminEmail, subject, body);
+    }
+
 }

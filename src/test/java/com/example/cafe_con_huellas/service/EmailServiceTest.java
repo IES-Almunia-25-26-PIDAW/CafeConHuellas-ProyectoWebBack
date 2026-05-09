@@ -88,4 +88,14 @@ class EmailServiceTest {
         assertThrows(RuntimeException.class,
                 () -> emailService.sendEmail("ana@test.com", "Asunto", "Cuerpo"));
     }
+
+    @Test
+    @DisplayName("Debe notificar al admin cuando un usuario envía un mensaje de contacto")
+    void shouldNotifyAdminContactForm() {
+        emailService.notifyAdminContactForm("Ana Cabello", "ana@test.com", "Hola, tengo una pregunta sobre adopción");
+
+        // Verificamos que se generó y envió el correo al admin
+        verify(mailSender, times(1)).createMimeMessage();
+        verify(mailSender, times(1)).send(mimeMessage);
+    }
 }

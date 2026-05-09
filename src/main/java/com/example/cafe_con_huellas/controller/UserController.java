@@ -1,6 +1,7 @@
 package com.example.cafe_con_huellas.controller;
 
 import com.example.cafe_con_huellas.dto.RegisterDTO;
+import com.example.cafe_con_huellas.dto.UpdateProfileDTO;
 import com.example.cafe_con_huellas.dto.UserDetailDTO;
 import com.example.cafe_con_huellas.dto.UserSummaryDTO;
 import com.example.cafe_con_huellas.mapper.UserMapper;
@@ -52,6 +53,29 @@ public class UserController {
                 .getAuthentication()
                 .getName();
         return userService.findByEmail(email);
+    }
+
+    /**
+     * Actualiza el perfil del usuario autenticado.
+     * <p>
+     * No requiere rol específico: cualquier usuario con un token válido
+     * puede actualizar su propio perfil. El backend identifica al usuario
+     * a partir del email almacenado en el JWT, nunca desde un parámetro
+     * enviado por el cliente.
+     * Campos no modificables desde este endpoint: email, contraseña y rol.
+     * </p>
+     *
+     * @param updateProfileDTO nuevos datos del perfil
+     * @return {@link UserDetailDTO} con los datos actualizados
+     */
+    @PutMapping("/me")
+    public UserDetailDTO updateMyProfile(@Valid @RequestBody UpdateProfileDTO updateProfileDTO) {
+        // Extraemos el email del usuario autenticado directamente del JWT
+        // Así garantizamos que nadie puede modificar el perfil de otro usuario
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+        return userService.updateMyProfile(email, updateProfileDTO);
     }
 
     /**

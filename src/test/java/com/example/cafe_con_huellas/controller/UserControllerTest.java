@@ -2,6 +2,7 @@ package com.example.cafe_con_huellas.controller;
 
 import com.example.cafe_con_huellas.config.SecurityConfig;
 import com.example.cafe_con_huellas.dto.RegisterDTO;
+import com.example.cafe_con_huellas.dto.UpdateProfileDTO;
 import com.example.cafe_con_huellas.dto.UserDetailDTO;
 import com.example.cafe_con_huellas.mapper.UserMapper;
 import com.example.cafe_con_huellas.mapper.UserMapperImpl;
@@ -202,6 +203,49 @@ class UserControllerTest {
         mockMvc.perform(put("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(buildUserDetailDTO())))
+                .andExpect(status().isForbidden());
+    }
+
+    // -------------------- PUT /me --------------------
+
+    @Test
+    @DisplayName("PUT /api/users/me con usuario autenticado actualiza su perfil y devuelve 200")
+    @WithMockUser(username = "maria@example.com", roles = "USER")
+    void shouldUpdateMyProfileAsUser() throws Exception {
+        // Preparamos el DTO con los nuevos datos del perfil
+        UpdateProfileDTO updateDTO = UpdateProfileDTO.builder()
+                .firstName("María")
+                .lastName1("García")
+                .lastName2("López")
+                .phone("612345678")
+                .imageUrl("https://example.com/nueva-foto.jpg")
+                .build();
+
+        // El servicio devuelve el perfil actualizado
+        UserDetailDTO updatedUser = buildUserDetailDTO();
+        when(userService.updateMyProfile(eq("maria@example.com"), any(UpdateProfileDTO.class)))
+                .thenReturn(updatedUser);
+
+        mockMvc.perform(put("/api/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("maria@example.com"))
+                .andExpect(jsonPath("$.firstName").value("María"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/users/me sin autenticación devuelve 403")
+    void shouldReturn403WhenUpdateMyProfileWithoutAuth() throws Exception {
+        UpdateProfileDTO updateDTO = UpdateProfileDTO.builder()
+                .firstName("María")
+                .lastName1("García")
+                .phone("612345678")
+                .build();
+
+        mockMvc.perform(put("/api/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isForbidden());
     }
 

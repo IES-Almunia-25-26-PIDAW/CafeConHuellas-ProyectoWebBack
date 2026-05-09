@@ -54,6 +54,7 @@ El sistema distingue dos tipos de usuarios:
 ### 👥 Usuarios
 - Registro y login con JWT
 - Gestión de perfiles por parte del admin
+- Consulta y actualización del perfil propio por parte del usuario autenticado (nombre, apellidos, teléfono e imagen de perfil)
 
 ---
 
@@ -317,6 +318,7 @@ La API usa **JWT Bearer Token**. El flujo es:
 | `POST` | `/api/auth/login` | Login y obtención de token |
 | `GET` | `/api/adoption-form/validate/{token}` | Validar token de formulario de adopción |
 | `POST` | `/api/adoption-form/submit/{token}` | Enviar formulario de adopción |
+| `POST` | `/api/contact` | Enviar mensaje de contacto al administrador |
 
 ### Endpoints para usuarios autenticados (requieren token)
 
@@ -324,7 +326,8 @@ La API usa **JWT Bearer Token**. El flujo es:
 |---|---|---|
 | `POST` | `/api/adoption-form/send` | Enviar formulario (USER: solo para sí mismo; ADMIN: para cualquier usuario) |
 | `POST` | `/api/relationships/me` | Solicitar vínculo con una mascota (solo ACOGIDA, PASEO o VOLUNTARIADO) |
-
+| `GET`  | `/api/users/me` | Consultar el perfil del usuario autenticado |
+| `PUT`  | `/api/users/me` | Actualizar el perfil propio (nombre, apellidos, teléfono e imagen) |
 ---
 
 ## 🗂️ Modelo de datos

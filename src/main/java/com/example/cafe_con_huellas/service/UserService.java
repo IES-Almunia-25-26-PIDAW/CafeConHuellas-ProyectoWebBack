@@ -1,6 +1,7 @@
 package com.example.cafe_con_huellas.service;
 
 import com.example.cafe_con_huellas.dto.RegisterDTO;
+import com.example.cafe_con_huellas.dto.UpdateProfileDTO;
 import com.example.cafe_con_huellas.dto.UserDetailDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
@@ -136,6 +137,40 @@ public class UserService {
 
         return userMapper.toDetailDto(userRepository.save(user));
     }
+
+
+    /**
+     * Actualiza los datos del perfil del usuario autenticado.
+     * <p>
+     * El usuario se identifica por su email extraído del JWT,
+     * nunca por un parámetro enviado por el cliente, lo que garantiza
+     * que cada usuario solo puede modificar su propio perfil.
+     * No permite cambiar el email, la contraseña ni el rol.
+     * </p>
+     *
+     * @param email email del usuario autenticado, extraído del JWT
+     * @param dto   nuevos datos del perfil
+     * @return {@link UserDetailDTO} con los datos actualizados
+     * @throws ResourceNotFoundException si no existe el usuario con ese email
+     */
+    @Transactional
+    public UserDetailDTO updateMyProfile(String email, UpdateProfileDTO dto) {
+        // Buscamos al usuario por su email (extraído del JWT en el controlador)
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        // Actualizamos solo los campos que el usuario puede modificar
+        // El email, contraseña y rol nunca se tocan desde este método
+        user.setFirstName(dto.getFirstName());
+        user.setLastName1(dto.getLastName1());
+        user.setLastName2(dto.getLastName2());
+        user.setPhone(dto.getPhone());
+        user.setImageUrl(dto.getImageUrl());
+
+        // Guardamos y devolvemos el perfil actualizado
+        return userMapper.toDetailDto(userRepository.save(user));
+    }
+
 
     /**
      * Elimina un usuario del sistema de forma permanente.

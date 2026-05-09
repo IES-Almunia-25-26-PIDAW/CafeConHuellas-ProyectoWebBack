@@ -1,6 +1,7 @@
 package com.example.cafe_con_huellas.service;
 
 import com.example.cafe_con_huellas.dto.RegisterDTO;
+import com.example.cafe_con_huellas.dto.UpdateProfileDTO;
 import com.example.cafe_con_huellas.dto.UserDetailDTO;
 import com.example.cafe_con_huellas.exception.BadRequestException;
 import com.example.cafe_con_huellas.exception.ResourceNotFoundException;
@@ -155,5 +156,53 @@ class UserServiceTest {
 
         // Verificamos que se llamó al delete exactamente una vez
         verify(userRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    @DisplayName("Debe actualizar el perfil propio del usuario autenticado correctamente")
+    void shouldUpdateMyProfileSuccessfully() {
+        // Preparamos el DTO con los nuevos datos que el usuario quiere guardar
+        UpdateProfileDTO updateDTO = UpdateProfileDTO.builder()
+                .firstName("Ana Modificada")
+                .lastName1("Cruces")
+                .phone("699999999")
+                .imageUrl("https://example.com/nueva-foto.jpg")
+                .build();
+
+        // Simulamos que el repositorio encuentra al usuario por su email
+        when(userRepository.findByEmail("ana@test.com")).thenReturn(Optional.of(testUser));
+        // Simulamos que el guardado devuelve el usuario actualizado
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        // Simulamos que el mapper convierte la entidad al DTO de respuesta
+        when(userMapper.toDetailDto(testUser)).thenReturn(testUserDetailDTO);
+
+        UserDetailDTO result = userService.updateMyProfile("ana@test.com", updateDTO);
+
+        // Verificamos que devuelve el perfil actualizado
+        assertThat(result).isNotNull();
+        // Verificamos que se llamó a save exactamente una vez
+        verify(userRepository, times(1)).save(any(User.class));
+        // Verificamos que el rol NUNCA se toca en este método
+        verify(userMapper, never()).roleFromString(any());
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción al actualizar perfil si el usuario no existe")
+    void shouldThrowExceptionWhenUpdateMyProfileUserNotFound() {
+        UpdateProfileDTO updateDTO = UpdateProfileDTO.builder()
+                .firstName("Ana")
+                .lastName1("Cruces")
+                .phone("612345678")
+                .build();
+
+        // Simulamos que el email no corresponde a ningún usuario
+        when(userRepository.findByEmail("noexiste@test.com")).thenReturn(Optional.empty());
+
+        // Verificamos que lanza ResourceNotFoundException
+        assertThrows(ResourceNotFoundException.class,
+                () -> userService.updateMyProfile("noexiste@test.com", updateDTO));
+
+        // Verificamos que nunca se intenta guardar nada
+        verify(userRepository, never()).save(any());
     }
 }

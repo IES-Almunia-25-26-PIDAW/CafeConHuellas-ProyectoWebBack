@@ -146,6 +146,9 @@ public class SecurityConfig {
                                 "/uploads/**"
                         ).permitAll()
 
+                        // Formulario de contacto público: cualquier visitante puede enviar un mensaje al admin
+                        .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()
+
                         // Lectura pública de mascotas y eventos
                         .requestMatchers(HttpMethod.GET, "/api/pets/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
