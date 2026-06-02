@@ -1,5 +1,6 @@
 package com.example.cafe_con_huellas.repository;
 
+import com.example.cafe_con_huellas.model.entity.AdoptionStatus;
 import com.example.cafe_con_huellas.model.entity.Pet;
 import com.example.cafe_con_huellas.model.entity.PetCategory;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +35,8 @@ class PetRepositoryTest {
                 .weight(BigDecimal.valueOf(25.0))
                 .neutered(true)
                 .isPpp(false)
+                .urgentAdoption(false)
+                .adoptionStatus(AdoptionStatus.NO_ADOPTADO)
                 .build();
 
         Pet gato = Pet.builder()
@@ -45,6 +48,8 @@ class PetRepositoryTest {
                 .weight(BigDecimal.valueOf(4.5))
                 .neutered(false)
                 .isPpp(false)
+                .urgentAdoption(false)
+                .adoptionStatus(AdoptionStatus.NO_ADOPTADO)
                 .build();
 
         Pet ppp = Pet.builder()
@@ -56,6 +61,8 @@ class PetRepositoryTest {
                 .weight(BigDecimal.valueOf(40.0))
                 .neutered(true)
                 .isPpp(true)
+                .urgentAdoption(false)
+                .adoptionStatus(AdoptionStatus.NO_ADOPTADO)
                 .build();
 
         petRepository.saveAll(List.of(perro, gato, ppp));
@@ -145,6 +152,8 @@ class PetRepositoryTest {
                 .weight(BigDecimal.valueOf(8.0))
                 .neutered(false)
                 .isPpp(false)
+                .urgentAdoption(false)
+                .adoptionStatus(AdoptionStatus.NO_ADOPTADO)
                 .build();
 
         Pet saved = petRepository.save(nueva);

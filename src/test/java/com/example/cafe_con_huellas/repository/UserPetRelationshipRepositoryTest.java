@@ -55,6 +55,8 @@ class UserPetRelationshipRepositoryTest {
                 .weight(BigDecimal.valueOf(25.0))
                 .neutered(true)
                 .isPpp(false)
+                .urgentAdoption(false)
+                .adoptionStatus(AdoptionStatus.NO_ADOPTADO)
                 .build();
         testPet1 = petRepository.save(testPet1);
 
@@ -67,6 +69,8 @@ class UserPetRelationshipRepositoryTest {
                 .weight(BigDecimal.valueOf(4.0))
                 .neutered(true)
                 .isPpp(false)
+                .urgentAdoption(false)
+                .adoptionStatus(AdoptionStatus.NO_ADOPTADO)
                 .build();
         testPet2 = petRepository.save(testPet2);
 

@@ -1,10 +1,6 @@
 package com.example.cafe_con_huellas.repository;
 
-import com.example.cafe_con_huellas.model.entity.AdoptionFormToken;
-import com.example.cafe_con_huellas.model.entity.Pet;
-import com.example.cafe_con_huellas.model.entity.PetCategory;
-import com.example.cafe_con_huellas.model.entity.Role;
-import com.example.cafe_con_huellas.model.entity.User;
+import com.example.cafe_con_huellas.model.entity.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -57,6 +53,8 @@ class AdoptionFormTokenRepositoryTest {
                 .weight(BigDecimal.valueOf(25.0))
                 .neutered(true)
                 .isPpp(false)
+                .urgentAdoption(false)
+                .adoptionStatus(AdoptionStatus.NO_ADOPTADO)
                 .build();
         testPet = petRepository.save(testPet);
 

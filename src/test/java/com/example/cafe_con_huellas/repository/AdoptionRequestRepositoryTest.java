@@ -62,6 +62,7 @@ class AdoptionRequestRepositoryTest {
                 .neutered(true)
                 .isPpp(false)
                 .urgentAdoption(false)
+                .adoptionStatus(AdoptionStatus.NO_ADOPTADO)
                 .build();
         pet = petRepository.save(pet);
 
